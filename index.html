@@ -40,6 +40,20 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-20" x-data="moaiApp()">
 
+    <!-- ログイン画面 -->
+    <div x-show="!isLoggedIn" class="min-h-screen flex items-center justify-center bg-slate-100 fixed inset-0 z-[100]">
+        <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-sm text-center">
+            <h1 class="text-2xl font-bold mb-6 text-moai-600"><i class="fa-solid fa-beer-mug-empty mr-2"></i>MOAI NOTE</h1>
+            <p class="text-gray-600 mb-4">パスワードを入力してください</p>
+            <input type="password" x-model="passwordInput" placeholder="パスワード (0000)" class="w-full border rounded p-3 mb-4 text-center text-xl tracking-widest bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-moai-500" @keyup.enter="login">
+            <button @click="login" class="w-full bg-moai-600 hover:bg-moai-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors">ログイン</button>
+            <p x-show="loginError" x-cloak class="text-red-500 text-sm mt-3 font-bold">パスワードが間違っています。</p>
+        </div>
+    </div>
+
+    <!-- メインアプリケーション (ログイン後) -->
+    <div x-show="isLoggedIn" x-cloak>
+
     <!-- Header -->
     <header class="bg-moai-600 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -61,17 +75,43 @@
     <main class="max-w-5xl mx-auto px-4 py-6">
         
         <!-- Navigation Tabs -->
-        <nav class="flex space-x-1 sm:space-x-4 mb-6 overflow-x-auto pb-2">
-            <button @click="currentTab = 'dashboard'" :class="{'bg-moai-600 text-white': currentTab === 'dashboard', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'dashboard'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap">
+        <nav class="flex space-x-1 sm:space-x-4 mb-6 overflow-x-auto pb-2" x-show="currentTab !== 'menu'">
+            <button @click="currentTab = 'menu'" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap bg-white text-gray-600 hover:bg-gray-50 border border-gray-200">
+                <i class="fa-solid fa-home mr-1"></i> ホーム
+            </button>
+            <button @click="currentTab = 'dashboard'" :class="{'bg-moai-600 text-white': currentTab === 'dashboard', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'dashboard'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
                 <i class="fa-solid fa-chart-line mr-1"></i> ダッシュボード
             </button>
-            <button @click="currentTab = 'meeting'" :class="{'bg-moai-600 text-white': currentTab === 'meeting', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'meeting'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap">
+            <button @click="currentTab = 'meeting'" :class="{'bg-moai-600 text-white': currentTab === 'meeting', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'meeting'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
                 <i class="fa-solid fa-calendar-check mr-1"></i> 開催管理
             </button>
-            <button @click="currentTab = 'members'" :class="{'bg-moai-600 text-white': currentTab === 'members', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'members'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap">
+            <button @click="currentTab = 'user_view'" :class="{'bg-moai-600 text-white': currentTab === 'user_view', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'user_view'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
+                <i class="fa-solid fa-user mr-1"></i> ユーザー閲覧
+            </button>
+            <button @click="currentTab = 'members'" :class="{'bg-moai-600 text-white': currentTab === 'members', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'members'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
                 <i class="fa-solid fa-users mr-1"></i> メンバー管理
             </button>
         </nav>
+
+        <!-- Tab: Menu (ホーム画面) -->
+        <div x-show="currentTab === 'menu'" x-cloak class="min-h-[60vh] flex flex-col items-center justify-center space-y-6">
+            <h2 class="text-2xl font-bold text-gray-700 mb-8">メインメニュー</h2>
+            
+            <button @click="currentRole = 'manager'; currentTab = 'meeting'" class="w-full max-w-xs bg-moai-600 hover:bg-moai-700 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
+                <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-calendar-check text-3xl"></i></div>
+                幹事 <span class="text-sm font-normal ml-auto bg-white/20 px-2 py-1 rounded">開催管理</span>
+            </button>
+            
+            <button @click="currentRole = 'member'; currentTab = 'user_view'" class="w-full max-w-xs bg-emerald-500 hover:bg-emerald-600 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
+                <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-user text-3xl"></i></div>
+                ユーザー <span class="text-sm font-normal ml-auto bg-white/20 px-2 py-1 rounded">閲覧</span>
+            </button>
+            
+            <button @click="currentTab = 'dashboard'" class="w-full max-w-xs bg-indigo-500 hover:bg-indigo-600 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
+                <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-chart-line text-3xl"></i></div>
+                ダッシュボード
+            </button>
+        </div>
 
         <!-- Tab: Dashboard -->
         <div x-show="currentTab === 'dashboard'" x-cloak class="space-y-6">
@@ -122,7 +162,7 @@
             <div class="flex justify-between items-center bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                 <div class="flex items-center space-x-4">
                     <button @click="prevMonth" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><i class="fa-solid fa-chevron-left"></i></button>
-                    <h2 class="text-xl font-bold w-24 text-center" x-text="activeMonth + '月'"></h2>
+                    <h2 class="text-xl font-bold w-64 text-center text-gray-700" x-text="'令和' + getReiwaYear() + '年 第' + activeMonth + '回 (' + activeMonth + '月)'"></h2>
                     <button @click="nextMonth" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
                 <div>
@@ -131,9 +171,9 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="max-w-2xl mx-auto">
                 <!-- 基本情報 -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 md:col-span-1 space-y-4">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
                     <h3 class="font-bold border-b pb-2 text-gray-700"><i class="fa-solid fa-circle-info mr-1"></i>基本情報</h3>
                     
                     <div>
@@ -155,43 +195,13 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">今月の幹事 <span class="text-xs text-moai-600">(先月取得者)</span></label>
+                        <label class="block text-sm text-gray-600 mb-1">今月の幹事</label>
                         <select x-model="currentRecord.managerId" :disabled="!canEdit()" class="w-full border rounded p-2 bg-gray-50 focus:bg-white disabled:opacity-70">
                             <option value="">-- 選択 --</option>
                             <template x-for="member in members" :key="member.id">
                                 <option :value="member.id" x-text="member.name"></option>
                             </template>
                         </select>
-                    </div>
-                </div>
-
-                <!-- ステータス管理 -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 md:col-span-2 space-y-4">
-                    <h3 class="font-bold border-b pb-2 text-gray-700"><i class="fa-solid fa-hand-holding-dollar mr-1"></i>受給管理</h3>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">受給決定フロー</label>
-                            <select x-model="currentRecord.flow" :disabled="!canEdit()" class="w-full border rounded p-2 bg-gray-50 focus:bg-white disabled:opacity-70">
-                                <option value="hope_1">希望者1名</option>
-                                <option value="hope_multi">希望者複数 (話し合い)</option>
-                                <option value="amida">希望者ゼロ (あみだくじ等)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">今月の受給者 <span class="text-xs text-red-500">(次期幹事)</span></label>
-                            <select x-model="currentRecord.receiverId" :disabled="!canEdit()" class="w-full border rounded p-2 bg-gray-50 focus:bg-white disabled:opacity-70 border-yellow-400">
-                                <option value="">-- 未定 --</option>
-                                <template x-for="member in getUnreceivedMembers()" :key="member.id">
-                                    <option :value="member.id" x-text="member.name"></option>
-                                </template>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">メモ</label>
-                        <textarea x-model="currentRecord.notes" :disabled="!canEdit()" rows="2" class="w-full border rounded p-2 bg-gray-50 focus:bg-white disabled:opacity-70"></textarea>
                     </div>
 
                     <div class="pt-4 border-t mt-4 flex justify-end space-x-3" x-show="canEdit()">
@@ -237,11 +247,41 @@
 
         </div>
 
+        <!-- Tab: User View -->
+        <div x-show="currentTab === 'user_view'" x-cloak class="space-y-6 max-w-2xl mx-auto">
+            <div class="flex justify-between items-center bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div class="flex items-center space-x-4 mx-auto">
+                    <button @click="prevMonth" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><i class="fa-solid fa-chevron-left"></i></button>
+                    <h2 class="text-xl font-bold w-64 text-center text-gray-700" x-text="'令和' + getReiwaYear() + '年 第' + activeMonth + '回 (' + activeMonth + '月)'"></h2>
+                    <button @click="nextMonth" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
+                <h3 class="font-bold border-b pb-2 text-gray-700 text-lg"><i class="fa-solid fa-calendar-day mr-2"></i>開催情報</h3>
+                
+                <div class="flex flex-col space-y-1">
+                    <span class="text-sm text-gray-500">開催日時</span>
+                    <span class="text-xl font-bold text-gray-800" x-text="formatDate(currentRecord.datetime) || '未定'"></span>
+                </div>
+                
+                <div class="flex flex-col space-y-1">
+                    <span class="text-sm text-gray-500">開催場所</span>
+                    <span class="text-xl font-bold text-gray-800" x-text="currentRecord.place || '未定'"></span>
+                </div>
+                
+                <div class="flex flex-col space-y-1">
+                    <span class="text-sm text-gray-500">参加人数</span>
+                    <span class="text-xl font-bold text-gray-800"><span x-text="totalAttendance"></span> 名</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Tab: Members -->
         <div x-show="currentTab === 'members'" x-cloak class="space-y-6">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                 <div class="flex justify-between items-center border-b pb-2 mb-4">
-                    <h2 class="text-lg font-bold text-gray-700">メンバー管理</h2>
+                    <h2 class="text-lg font-bold text-gray-700">令和<span x-text="getReiwaYear()"></span>年度 メンバー管理</h2>
                     <span class="text-sm text-gray-500">計 <span x-text="members.length"></span> 名</span>
                 </div>
                 
@@ -270,6 +310,7 @@
         </div>
 
     </main>
+    </div>
 
     <script>
         // 初期メンバー (沖縄に多い名字をサンプルとして12名)
@@ -284,12 +325,42 @@
 
         document.addEventListener('alpine:init', () => {
             Alpine.data('moaiApp', () => ({
+                isLoggedIn: false,
+                passwordInput: '',
+                loginError: false,
                 currentRole: 'admin', // admin, manager, member
-                currentTab: 'dashboard',
+                currentTab: 'menu',
                 activeMonth: new Date().getMonth() + 1, // 1〜12
                 members: [],
                 records: {},
                 newMemberName: '',
+
+                // --- 権限選択ドロップダウンの制限について（将来の実装向けメモ）---
+                // 「参加メンバー」が、「管理者」を選択しても「操作不可」
+                // 「幹事」が「管理者」を選択した場合も「操作不可」
+                // 「幹事」が「参加メンバー」を選択した場合は、「参加メンバー」と同じ操作ができる
+                // 現在はUI上は自由に選択可能だが、今後の実装で上記の制約を加えること。
+
+                login() {
+                    if (this.passwordInput === '0000') {
+                        this.isLoggedIn = true;
+                        this.loginError = false;
+                        this.currentTab = 'menu';
+                    } else {
+                        this.loginError = true;
+                    }
+                },
+                getReiwaYear() {
+                    const currentYear = new Date().getFullYear();
+                    // 2018年を引くと令和年になります
+                    return currentYear - 2018;
+                },
+                formatDate(dateString) {
+                    if (!dateString) return '';
+                    const d = new Date(dateString);
+                    if(isNaN(d.getTime())) return '';
+                    return d.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+                },
 
                 init() {
                     this.loadData();
@@ -391,9 +462,11 @@
                 },
 
                 saveRecord() {
-                    // もし受給者が決まっていて日付等が入力されていれば完了とする簡易ロジック
-                    if(this.currentRecord.receiverId && this.currentRecord.datetime) {
+                    // 開催日時と場所が入力されていれば完了とする
+                    if(this.currentRecord.datetime && this.currentRecord.place) {
                         this.currentRecord.isCompleted = true;
+                    } else {
+                        this.currentRecord.isCompleted = false;
                     }
                     this.saveRecords();
                 },
