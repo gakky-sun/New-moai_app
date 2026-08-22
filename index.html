@@ -44,10 +44,22 @@
     <div x-show="!isLoggedIn" class="min-h-screen flex items-center justify-center bg-slate-100 fixed inset-0 z-[100]">
         <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-sm text-center">
             <h1 class="text-2xl font-bold mb-6 text-moai-600"><i class="fa-solid fa-beer-mug-empty mr-2"></i>MOAI NOTE</h1>
-            <p class="text-gray-600 mb-4">パスワードを入力してください</p>
-            <input type="password" x-model="passwordInput" placeholder="パスワード (0000)" class="w-full border rounded p-3 mb-4 text-center text-xl tracking-widest bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-moai-500" @keyup.enter="login">
+            
+            <!-- 名前選択 -->
+            <div class="mb-4 text-left">
+                <label class="block text-sm text-gray-600 mb-1 font-bold">あなたの名前</label>
+                <select x-model="loginMemberInput" class="w-full border rounded p-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-moai-500 text-center text-lg">
+                    <option value="">-- 管理者としてログイン --</option>
+                    <template x-for="member in activeMembers" :key="member.id">
+                        <option :value="member.id" x-text="member.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <p class="text-gray-600 mb-2 text-sm">パスワードを入力してください</p>
+            <input type="password" x-model="passwordInput" placeholder="一般: 0000 / 管理者: 8888" class="w-full border rounded p-3 mb-4 text-center text-xl tracking-widest bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-moai-500" @keyup.enter="login">
             <button @click="login" class="w-full bg-moai-600 hover:bg-moai-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors">ログイン</button>
-            <p x-show="loginError" x-cloak class="text-red-500 text-sm mt-3 font-bold">パスワードが間違っています。</p>
+            <p x-show="loginError" x-cloak class="text-red-500 text-sm mt-3 font-bold">名前の選択、またはパスワードが間違っています。</p>
         </div>
     </div>
 
@@ -59,14 +71,33 @@
         <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
             <h1 class="text-xl font-bold tracking-wider"><i class="fa-solid fa-beer-mug-empty mr-2"></i>MOAI NOTE</h1>
             
-            <!-- ロール切り替え -->
-            <div class="flex items-center space-x-2 text-sm">
-                <label for="role-select" class="hidden sm:block">権限:</label>
-                <select id="role-select" x-model="currentRole" class="bg-moai-500 border border-moai-500 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-white">
-                    <option value="admin">管理者</option>
-                    <option value="manager">幹事</option>
-                    <option value="member">参加メンバー</option>
-                </select>
+            <!-- 年度・ロール切り替え -->
+            <div class="flex items-center space-x-4">
+                <!-- 年度選択 -->
+                <div class="flex items-center space-x-2 text-sm">
+                    <label for="year-select" class="hidden sm:block">年度:</label>
+                    <select id="year-select" :value="activeYear" @change="changeYear($event.target.value)" class="bg-moai-500 border border-moai-500 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-white">
+                        <option value="2024">令和6年 (2024)</option>
+                        <option value="2025">令和7年 (2025)</option>
+                        <option value="2026">令和8年 (2026)</option>
+                        <option value="2027">令和9年 (2027)</option>
+                        <option value="2028">令和10年 (2028)</option>
+                    </select>
+                </div>
+                
+                <!-- ログイン状態の表示 -->
+                <div class="flex items-center space-x-2 text-sm bg-moai-700 px-3 py-1.5 rounded-lg shadow-inner">
+                    <span class="font-bold flex items-center">
+                        <i class="fa-solid fa-user mr-1.5 opacity-85"></i>
+                        <span x-text="getLoggedInMemberName()"></span>
+                    </span>
+                    <span class="text-xs px-2 py-0.5 rounded font-bold" :class="{'bg-red-500 text-white': currentRole === 'admin', 'bg-yellow-400 text-slate-900': currentRole === 'manager', 'bg-slate-500 text-white': currentRole === 'member'}">
+                        <span x-text="currentRole === 'admin' ? '管理者' : (currentRole === 'manager' ? '幹事' : '閲覧メンバー')"></span>
+                    </span>
+                    <button @click="logout()" class="ml-2 text-xs font-normal underline hover:text-red-200 transition-colors" title="ログアウト">
+                        <i class="fa-solid fa-right-from-bracket mr-0.5"></i>ログアウト
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -88,24 +119,24 @@
             <button @click="currentTab = 'user_view'" :class="{'bg-moai-600 text-white': currentTab === 'user_view', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'user_view'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
                 <i class="fa-solid fa-user mr-1"></i> ユーザー閲覧
             </button>
-            <button @click="currentTab = 'members'" :class="{'bg-moai-600 text-white': currentTab === 'members', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'members'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
+            <button @click="currentTab = 'members'" x-show="currentRole === 'admin'" :class="{'bg-moai-600 text-white': currentTab === 'members', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'members'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
                 <i class="fa-solid fa-users mr-1"></i> メンバー管理
             </button>
         </nav>
-
+ 
         <!-- Tab: Menu (ホーム画面) -->
         <div x-show="currentTab === 'menu'" x-cloak class="min-h-[60vh] flex flex-col items-center justify-center space-y-6">
             <h2 class="text-2xl font-bold text-gray-700 mb-8">メインメニュー</h2>
             
-            <button @click="currentRole = 'manager'; currentTab = 'meeting'" class="w-full max-w-xs bg-moai-600 hover:bg-moai-700 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
+            <button @click="currentTab = 'meeting'" class="w-full max-w-xs bg-moai-600 hover:bg-moai-700 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
                 <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-calendar-check text-3xl"></i></div>
                 <div class="flex-1 text-left">
-                    <div>幹事 <span class="text-sm font-normal ml-2 bg-white/20 px-2 py-1 rounded">開催管理</span></div>
+                    <div>開催管理 <span class="text-sm font-normal ml-2 bg-white/20 px-2 py-1 rounded">閲覧・編集</span></div>
                     <div class="text-sm font-normal mt-1 opacity-90">次回幹事: <span x-text="getCurrentManagerName()"></span></div>
                 </div>
             </button>
             
-            <button @click="currentRole = 'member'; currentTab = 'user_view'" class="w-full max-w-xs bg-emerald-500 hover:bg-emerald-600 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
+            <button @click="currentTab = 'user_view'" class="w-full max-w-xs bg-emerald-500 hover:bg-emerald-600 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
                 <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-user text-3xl"></i></div>
                 ユーザー <span class="text-sm font-normal ml-auto bg-white/20 px-2 py-1 rounded">閲覧</span>
             </button>
@@ -119,9 +150,18 @@
         <!-- Tab: Dashboard -->
         <div x-show="currentTab === 'dashboard'" x-cloak class="space-y-6">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                <h2 class="text-lg font-bold border-b pb-2 mb-4 text-gray-700">今年度の取得状況マトリクス</h2>
-                
-                <div class="overflow-x-auto">
+                <h2 class="text-lg font-bold border-b pb-2 mb-4 text-gray-700">
+                    令和<span x-text="getReiwaYear()"></span>年度 取得状況
+                </h2>
+
+                <!-- 凡例 -->
+                <div class="mb-4 flex space-x-4 text-sm text-gray-600">
+                    <div class="flex items-center"><span class="w-4 h-4 rounded-full bg-yellow-400 mr-1.5 shadow-sm inline-block"></span> 取得者</div>
+                    <div class="flex items-center"><span class="w-4 h-4 rounded-full bg-moai-500 mr-1.5 shadow-sm inline-block"></span> 幹事</div>
+                </div>
+
+                <!-- ── PC用: テーブル表示 (sm以上で表示) ── -->
+                <div class="hidden sm:block overflow-x-auto">
                     <table class="min-w-full text-sm text-center border-collapse">
                         <thead>
                             <tr class="bg-slate-50">
@@ -133,7 +173,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="member in members" :key="member.id">
+                            <template x-for="member in getDashboardMembers()" :key="member.id">
                                 <tr>
                                     <td class="border p-2 sticky left-0 bg-white z-10 font-medium" x-text="member.name"></td>
                                     <template x-for="month in 12">
@@ -152,9 +192,46 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-4 flex space-x-4 text-sm text-gray-600">
-                    <div class="flex items-center"><span class="w-4 h-4 rounded-full bg-yellow-400 mr-1 shadow-sm"></span> 取得者</div>
-                    <div class="flex items-center"><span class="w-4 h-4 rounded-full bg-moai-500 mr-1 shadow-sm"></span> 幹事</div>
+
+                <!-- ── スマホ用: カード表示 (sm未満で表示) ── -->
+                <div class="sm:hidden space-y-3">
+                    <template x-for="member in getDashboardMembers()" :key="member.id">
+                        <div class="rounded-xl border p-4 transition-all"
+                             :class="hasReceived(member.id) ? 'border-green-200 bg-green-50' : 'border-slate-200 bg-slate-50'">
+                            <!-- ヘッダー行: 名前 + 取得済バッジ -->
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="font-bold text-gray-800 text-base" x-text="member.name"></span>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-full"
+                                      :class="hasReceived(member.id) ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'"
+                                      x-text="hasReceived(member.id) ? '✓ 取得済' : '未取得'"></span>
+                            </div>
+
+                            <!-- 取得月タグ -->
+                            <div class="mb-2" x-show="getMemberReceiverMonths(member.id).length > 0">
+                                <p class="text-xs text-gray-500 mb-1.5 font-bold"><i class="fa-solid fa-coins mr-1 text-yellow-400"></i>取得月</p>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <template x-for="month in getMemberReceiverMonths(member.id)" :key="month">
+                                        <span class="text-xs bg-yellow-400 text-white font-bold px-2.5 py-1 rounded-full shadow-sm" x-text="month + '月'"></span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- 幹事担当月タグ -->
+                            <div x-show="getMemberManagerMonths(member.id).length > 0">
+                                <p class="text-xs text-gray-500 mb-1.5 font-bold"><i class="fa-solid fa-flag mr-1 text-moai-500"></i>幹事担当月</p>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <template x-for="month in getMemberManagerMonths(member.id)" :key="month">
+                                        <span class="text-xs bg-moai-500 text-white font-bold px-2.5 py-1 rounded-full shadow-sm" x-text="month + '月'"></span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- 何もない場合 -->
+                            <div x-show="getMemberReceiverMonths(member.id).length === 0 && getMemberManagerMonths(member.id).length === 0">
+                                <p class="text-xs text-gray-400 italic">担当履歴なし</p>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -202,7 +279,7 @@
                         <label class="block text-sm text-gray-600 mb-1">今月の幹事</label>
                         <select x-model="currentRecord.managerId" :disabled="!canEdit()" class="w-full border rounded p-2 bg-gray-50 focus:bg-white disabled:opacity-70">
                             <option value="">-- 選択 --</option>
-                            <template x-for="member in members" :key="member.id">
+                            <template x-for="member in activeMembers" :key="member.id">
                                 <option :value="member.id" x-text="member.name"></option>
                             </template>
                         </select>
@@ -243,7 +320,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="member in members" :key="member.id">
+                            <template x-for="member in getAttendanceMembers()" :key="member.id">
                                 <tr class="border-b hover:bg-slate-50">
                                     <td class="p-2 font-medium" x-text="member.name"></td>
                                     <td class="p-2 text-center">
@@ -309,7 +386,7 @@
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    <template x-for="member in members" :key="member.id">
+                    <template x-for="member in activeMembers" :key="member.id">
                         <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200">
                             <span class="font-bold text-gray-800" x-text="member.name"></span>
                             <button @click="removeMember(member.id)" x-show="canEditAdmin()" class="text-red-400 hover:text-red-600" title="削除">
@@ -346,32 +423,84 @@
                 isLoggedIn: false,
                 passwordInput: '',
                 loginError: false,
-                currentRole: 'admin', // admin, manager, member
+                loginMemberInput: '',
+                loggedInMemberId: '',
+                isAdminLoggedIn: false,
                 currentTab: 'menu',
+                activeYear: new Date().getFullYear(),
                 activeMonth: new Date().getMonth() + 1, // 1〜12
                 members: [],
                 records: {},
                 newMemberName: '',
 
-                // --- 権限選択ドロップダウンの制限について（将来の実装向けメモ）---
-                // 「参加メンバー」が、「管理者」を選択しても「操作不可」
-                // 「幹事」が「管理者」を選択した場合も「操作不可」
-                // 「幹事」が「参加メンバー」を選択した場合は、「参加メンバー」と同じ操作ができる
-                // 現在はUI上は自由に選択可能だが、今後の実装で上記の制約を加えること。
+                get currentRole() {
+                    if (this.isAdminLoggedIn) return 'admin';
+                    if (!this.isLoggedIn) return 'member';
+                    
+                    const currentManagerId = this.records[this.activeMonth]?.managerId;
+                    if (currentManagerId && currentManagerId === this.loggedInMemberId) {
+                        return 'manager';
+                    }
+                    return 'member';
+                },
 
                 login() {
-                    if (this.passwordInput === '0000') {
+                    if (this.passwordInput === '8888') {
+                        // 管理者ログイン
                         this.isLoggedIn = true;
+                        this.isAdminLoggedIn = true;
+                        this.loggedInMemberId = this.loginMemberInput;
                         this.loginError = false;
                         this.currentTab = 'menu';
+                    } else if (this.passwordInput === '0000') {
+                        // 一般ログイン
+                        if (!this.loginMemberInput) {
+                            this.loginError = true;
+                            return;
+                        }
+                        this.isLoggedIn = true;
+                        this.isAdminLoggedIn = false;
+                        this.loggedInMemberId = this.loginMemberInput;
+                        this.loginError = false;
+                        
+                        // 幹事なら開催管理、その他ならユーザー閲覧タブへ
+                        if (this.currentRole === 'manager') {
+                            this.currentTab = 'meeting';
+                        } else {
+                            this.currentTab = 'user_view';
+                        }
                     } else {
                         this.loginError = true;
                     }
                 },
+
+                logout() {
+                    this.isLoggedIn = false;
+                    this.isAdminLoggedIn = false;
+                    this.loggedInMemberId = '';
+                    this.loginMemberInput = '';
+                    this.passwordInput = '';
+                    this.currentTab = 'menu';
+                },
+
+                getLoggedInMemberName() {
+                    if (this.isAdminLoggedIn) {
+                        if (this.loggedInMemberId) {
+                            const m = this.members.find(member => member.id === this.loggedInMemberId);
+                            return (m ? m.name : '管理者') + ' (管理者)';
+                        }
+                        return '管理者';
+                    }
+                    if (this.loggedInMemberId) {
+                        const m = this.members.find(member => member.id === this.loggedInMemberId);
+                        return m ? m.name : '不明';
+                    }
+                    return 'ゲスト';
+                },
+
                 getReiwaYear() {
-                    const currentYear = new Date().getFullYear();
-                    // 2018年を引くと令和年になります
-                    return currentYear - 2018;
+                    // activeYear に基づいて計算
+                    return this.activeYear - 2018;
                 },
                 formatDate(dateString) {
                     if (!dateString) return '';
@@ -396,15 +525,25 @@
                 },
 
                 loadData() {
-                    const savedMembers = localStorage.getItem('moai_members');
+                    const membersKey = `moai_members_${this.activeYear}`;
+                    const recordsKey = `moai_records_${this.activeYear}`;
+
+                    const savedMembers = localStorage.getItem(membersKey);
                     if (savedMembers) {
-                        this.members = JSON.parse(savedMembers);
+                        this.members = JSON.parse(savedMembers).map(m => ({ isDeleted: false, ...m }));
                     } else {
-                        this.members = [...DEFAULT_MEMBERS];
+                        // 前年のメンバーデータを探す
+                        const prevYearKey = `moai_members_${this.activeYear - 1}`;
+                        const prevMembers = localStorage.getItem(prevYearKey);
+                        if (prevMembers) {
+                            this.members = JSON.parse(prevMembers);
+                        } else {
+                            this.members = DEFAULT_MEMBERS.map(m => ({ ...m, isDeleted: false }));
+                        }
                         this.saveMembers();
                     }
 
-                    const savedRecords = localStorage.getItem('moai_records');
+                    const savedRecords = localStorage.getItem(recordsKey);
                     if (savedRecords) {
                         this.records = JSON.parse(savedRecords);
                     } else {
@@ -413,12 +552,19 @@
                 },
 
                 saveMembers() {
-                    localStorage.setItem('moai_members', JSON.stringify(this.members));
+                    localStorage.setItem(`moai_members_${this.activeYear}`, JSON.stringify(this.members));
                 },
 
                 saveRecords() {
-                    localStorage.setItem('moai_records', JSON.stringify(this.records));
+                    localStorage.setItem(`moai_records_${this.activeYear}`, JSON.stringify(this.records));
                     alert('保存しました。');
+                },
+
+                changeYear(year) {
+                    this.activeYear = Number(year);
+                    this.loadData();
+                    // 現在の月のレコードがなければ初期化
+                    this.initRecordForMonth(this.activeMonth);
                 },
 
                 initRecordForMonth(month) {
@@ -506,11 +652,38 @@
                     return this.currentRole === 'admin';
                 },
 
+                // 論理削除用ゲッター
+                get activeMembers() {
+                    return this.members.filter(m => !m.isDeleted);
+                },
+                getDashboardMembers() {
+                    const active = this.activeMembers;
+                    const historical = this.members.filter(m => {
+                        if (!m.isDeleted) return false;
+                        for (let month = 1; month <= 12; month++) {
+                            if (this.isReceiver(month, m.id) || this.isManager(month, m.id)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+                    return [...active, ...historical];
+                },
+                getAttendanceMembers() {
+                    const active = this.activeMembers;
+                    const attended = this.members.filter(m => {
+                        if (!m.isDeleted) return false;
+                        const att = this.currentRecord?.attendance?.[m.id];
+                        return att && (att.member || (Number(att.family) > 0));
+                    });
+                    return [...active, ...attended];
+                },
+
                 // メンバー管理用
                 addMember() {
                     if(this.newMemberName.trim() === '') return;
                     const id = 'm' + Date.now();
-                    this.members.push({ id: id, name: this.newMemberName.trim() });
+                    this.members.push({ id: id, name: this.newMemberName.trim(), isDeleted: false });
                     this.newMemberName = '';
                     this.saveMembers();
                     // レコードの補完
@@ -521,9 +694,12 @@
                 },
                 
                 removeMember(id) {
-                    if(confirm('本当に削除しますか？\n過去の記録等に影響が出る可能性があります。')) {
-                        this.members = this.members.filter(m => m.id !== id);
-                        this.saveMembers();
+                    if(confirm('本当に削除しますか？\n過去の記録には名前が残ります。')) {
+                        const member = this.members.find(m => m.id === id);
+                        if (member) {
+                            member.isDeleted = true;
+                            this.saveMembers();
+                        }
                     }
                 },
 
@@ -540,14 +716,30 @@
                     }
                     return false;
                 },
+                // スマホカード表示用: そのメンバーが取得者だった月の一覧を返す
+                getMemberReceiverMonths(memberId) {
+                    const months = [];
+                    for (let m = 1; m <= 12; m++) {
+                        if (this.isReceiver(m, memberId)) months.push(m);
+                    }
+                    return months;
+                },
+                // スマホカード表示用: そのメンバーが幹事だった月の一覧を返す
+                getMemberManagerMonths(memberId) {
+                    const months = [];
+                    for (let m = 1; m <= 12; m++) {
+                        if (this.isManager(m, memberId)) months.push(m);
+                    }
+                    return months;
+                },
                 getUnreceivedMembers() {
-                    return this.members.filter(m => !this.hasReceived(m.id) || (this.currentRecord && this.currentRecord.receiverId === m.id));
+                    return this.activeMembers.filter(m => !this.hasReceived(m.id) || (this.currentRecord && this.currentRecord.receiverId === m.id));
                 },
 
                 resetData() {
-                    if(confirm('全てのデータが消去されます。よろしいですか？')) {
-                        localStorage.removeItem('moai_members');
-                        localStorage.removeItem('moai_records');
+                    if(confirm('現在の年度の全てのデータが消去されます。よろしいですか？')) {
+                        localStorage.removeItem(`moai_members_${this.activeYear}`);
+                        localStorage.removeItem(`moai_records_${this.activeYear}`);
                         location.reload();
                     }
                 }
