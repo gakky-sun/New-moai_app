@@ -66,10 +66,23 @@
     <!-- メインアプリケーション (ログイン後) -->
     <div x-show="isLoggedIn" x-cloak>
 
+    <!-- トースト通知 -->
+    <div x-show="toastMessage" x-cloak
+         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] bg-gray-800 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 transition-all"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <i class="fa-solid fa-check-circle text-green-400"></i>
+        <span x-text="toastMessage"></span>
+    </div>
+
     <!-- Header -->
     <header class="bg-moai-600 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-bold tracking-wider"><i class="fa-solid fa-beer-mug-empty mr-2"></i>MOAI NOTE</h1>
+            <h1 class="text-xl font-bold tracking-wider cursor-pointer hover:opacity-80 transition-opacity" @click="currentTab = 'menu'" title="ホームへ戻る"><i class="fa-solid fa-beer-mug-empty mr-2"></i>MOAI NOTE</h1>
             
             <!-- 年度・ロール切り替え -->
             <div class="flex items-center space-x-4">
@@ -111,7 +124,7 @@
                 <i class="fa-solid fa-home mr-1"></i> ホーム
             </button>
             <button @click="currentTab = 'dashboard'" :class="{'bg-moai-600 text-white': currentTab === 'dashboard', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'dashboard'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
-                <i class="fa-solid fa-chart-line mr-1"></i> ダッシュボード
+                <i class="fa-solid fa-clock-rotate-left mr-1"></i> 取得履歴
             </button>
             <button @click="currentTab = 'meeting'" :class="{'bg-moai-600 text-white': currentTab === 'meeting', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'meeting'}" class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
                 <i class="fa-solid fa-calendar-check mr-1"></i> 開催管理
@@ -142,8 +155,8 @@
             </button>
             
             <button @click="currentTab = 'dashboard'" class="w-full max-w-xs bg-indigo-500 hover:bg-indigo-600 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
-                <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-chart-line text-3xl"></i></div>
-                ダッシュボード
+                <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-clock-rotate-left text-3xl"></i></div>
+                取得履歴
             </button>
         </div>
 
@@ -151,7 +164,7 @@
         <div x-show="currentTab === 'dashboard'" x-cloak class="space-y-6">
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                 <h2 class="text-lg font-bold border-b pb-2 mb-4 text-gray-700">
-                    令和<span x-text="getReiwaYear()"></span>年度 取得状況
+                    <i class="fa-solid fa-clock-rotate-left mr-1 text-indigo-400"></i>令和<span x-text="getReiwaYear()"></span>年度 取得履歴
                 </h2>
 
                 <!-- 凡例 -->
@@ -206,12 +219,16 @@
                                       x-text="hasReceived(member.id) ? '✓ 取得済' : '未取得'"></span>
                             </div>
 
-                            <!-- 取得月タグ -->
-                            <div class="mb-2" x-show="getMemberReceiverMonths(member.id).length > 0">
+                            <!-- 取得月タグ（開催日付付き） -->
+                            <div class="mb-2" x-show="getMemberReceiverDetails(member.id).length > 0">
                                 <p class="text-xs text-gray-500 mb-1.5 font-bold"><i class="fa-solid fa-coins mr-1 text-yellow-400"></i>取得月</p>
-                                <div class="flex flex-wrap gap-1.5">
-                                    <template x-for="month in getMemberReceiverMonths(member.id)" :key="month">
-                                        <span class="text-xs bg-yellow-400 text-white font-bold px-2.5 py-1 rounded-full shadow-sm" x-text="month + '月'"></span>
+                                <div class="flex flex-col gap-1.5">
+                                    <template x-for="detail in getMemberReceiverDetails(member.id)" :key="detail.month">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-yellow-400 text-white font-bold px-2.5 py-1 rounded-full shadow-sm whitespace-nowrap" x-text="detail.month + '月'"></span>
+                                            <span class="text-xs text-gray-600" x-show="detail.date" x-text="detail.date"></span>
+                                            <span class="text-xs text-gray-400 italic" x-show="!detail.date">日程未定</span>
+                                        </div>
                                     </template>
                                 </div>
                             </div>
@@ -227,7 +244,7 @@
                             </div>
 
                             <!-- 何もない場合 -->
-                            <div x-show="getMemberReceiverMonths(member.id).length === 0 && getMemberManagerMonths(member.id).length === 0">
+                            <div x-show="getMemberReceiverDetails(member.id).length === 0 && getMemberManagerMonths(member.id).length === 0">
                                 <p class="text-xs text-gray-400 italic">担当履歴なし</p>
                             </div>
                         </div>
@@ -374,10 +391,75 @@
 
         <!-- Tab: Members -->
         <div x-show="currentTab === 'members'" x-cloak class="space-y-6">
+
+            <!-- 幹事一括指定パネル (管理者のみ表示) -->
+            <div class="bg-white rounded-xl shadow-sm border border-blue-100 p-5" x-show="canEditAdmin()">
+                <div class="flex items-center border-b pb-2 mb-4">
+                    <i class="fa-solid fa-flag text-moai-500 mr-2"></i>
+                    <h2 class="text-lg font-bold text-gray-700">令和<span x-text="getReiwaYear()"></span>年度 幹事一括指定</h2>
+                    <span class="ml-3 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">管理者専用</span>
+                </div>
+                <p class="text-sm text-gray-500 mb-4"><i class="fa-solid fa-circle-info mr-1"></i>各月の幹事を設定すると、そのメンバーは当月のみ「幹事権限（編集可）」でログインできるようになります。</p>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-gray-600">
+                                <th class="p-2 text-center w-16">月</th>
+                                <th class="p-2 text-left">幹事</th>
+                                <th class="p-2 text-left">取得者</th>
+                                <th class="p-2 text-center w-20">状態</th>
+                                <th class="p-2 text-center w-16">保存</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="month in 12" :key="month">
+                                <tr class="border-b hover:bg-slate-50" :class="month === activeMonth ? 'bg-blue-50 border-blue-200' : ''">
+                                    <td class="p-2 text-center font-bold" :class="month === activeMonth ? 'text-moai-600' : 'text-gray-600'">
+                                        <span x-text="month + '月'"></span>
+                                        <span x-show="month === activeMonth" class="block text-xs text-moai-400">今月</span>
+                                    </td>
+                                    <td class="p-2">
+                                        <select :id="'manager-select-' + month"
+                                                x-model="getOrInitRecord(month).managerId"
+                                                class="w-full border rounded p-1.5 text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-moai-500">
+                                            <option value="">-- 未定 --</option>
+                                            <template x-for="member in activeMembers" :key="member.id">
+                                                <option :value="member.id" x-text="member.name"></option>
+                                            </template>
+                                        </select>
+                                    </td>
+                                    <td class="p-2">
+                                        <select :id="'receiver-select-' + month"
+                                                x-model="getOrInitRecord(month).receiverId"
+                                                class="w-full border rounded p-1.5 text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-yellow-400 border-yellow-300">
+                                            <option value="">-- 未定 --</option>
+                                            <template x-for="member in activeMembers" :key="member.id">
+                                                <option :value="member.id" x-text="member.name"></option>
+                                            </template>
+                                        </select>
+                                    </td>
+                                    <td class="p-2 text-center">
+                                        <span x-show="records[month] && records[month].isCompleted" class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">完了</span>
+                                        <span x-show="!records[month] || !records[month].isCompleted" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">予定</span>
+                                    </td>
+                                    <td class="p-2 text-center">
+                                        <button @click="saveMonthManager(month)"
+                                                class="bg-moai-500 hover:bg-moai-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow transition-colors">
+                                            <i class="fa-solid fa-save"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- メンバー管理 -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                 <div class="flex justify-between items-center border-b pb-2 mb-4">
                     <h2 class="text-lg font-bold text-gray-700">令和<span x-text="getReiwaYear()"></span>年度 メンバー管理</h2>
-                    <span class="text-sm text-gray-500">計 <span x-text="members.length"></span> 名</span>
+                    <span class="text-sm text-gray-500">計 <span x-text="activeMembers.length"></span> 名</span>
                 </div>
                 
                 <div class="mb-4 flex space-x-2" x-show="canEditAdmin()">
@@ -432,6 +514,7 @@
                 members: [],
                 records: {},
                 newMemberName: '',
+                toastMessage: '', // トースト通知メッセージ,
 
                 get currentRole() {
                     if (this.isAdminLoggedIn) return 'admin';
@@ -557,7 +640,10 @@
 
                 saveRecords() {
                     localStorage.setItem(`moai_records_${this.activeYear}`, JSON.stringify(this.records));
-                    alert('保存しました。');
+                    // トースト通知を表示
+                    this.toastMessage = '保存しました。';
+                    clearTimeout(this._toastTimer);
+                    this._toastTimer = setTimeout(() => { this.toastMessage = ''; }, 2500);
                 },
 
                 changeYear(year) {
@@ -724,6 +810,26 @@
                     }
                     return months;
                 },
+                // スマホカード表示用: 取得月 + 開催日付のオブジェクト配列を返す
+                getMemberReceiverDetails(memberId) {
+                    const details = [];
+                    for (let m = 1; m <= 12; m++) {
+                        if (this.isReceiver(m, memberId)) {
+                            const rec = this.records[m];
+                            // 日付が設定されていれば "MM/DD(曜日)" 形式で表示
+                            let dateStr = '';
+                            if (rec && rec.datetime) {
+                                const d = new Date(rec.datetime);
+                                if (!isNaN(d.getTime())) {
+                                    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+                                    dateStr = `${d.getMonth() + 1}/${d.getDate()}（${weekdays[d.getDay()]}）`;
+                                }
+                            }
+                            details.push({ month: m, date: dateStr });
+                        }
+                    }
+                    return details;
+                },
                 // スマホカード表示用: そのメンバーが幹事だった月の一覧を返す
                 getMemberManagerMonths(memberId) {
                     const months = [];
@@ -734,6 +840,24 @@
                 },
                 getUnreceivedMembers() {
                     return this.activeMembers.filter(m => !this.hasReceived(m.id) || (this.currentRecord && this.currentRecord.receiverId === m.id));
+                },
+
+                // 幹事一括指定パネル用: 指定月のレコードを取得し、なければ初期化して返す
+                getOrInitRecord(month) {
+                    this.initRecordForMonth(month);
+                    return this.records[month];
+                },
+
+                // 幹事一括指定パネル用: 指定月の幹事・取得者のみ保存する
+                saveMonthManager(month) {
+                    this.initRecordForMonth(month);
+                    localStorage.setItem(`moai_records_${this.activeYear}`, JSON.stringify(this.records));
+                    // 完了判定は開催日時・場所の有無で決まるため、ここでは更新しない
+                    const msg = `${month}月の設定を保存しました。`;
+                    // 簡易トースト通知
+                    this.toastMessage = msg;
+                    clearTimeout(this._toastTimer);
+                    this._toastTimer = setTimeout(() => { this.toastMessage = ''; }, 2500);
                 },
 
                 resetData() {
