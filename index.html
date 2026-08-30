@@ -844,6 +844,15 @@
                 },
 
                 saveRecord() {
+                    // 取得者の重複チェック
+                    const duplicatedMonth = this.checkReceiverDuplication(this.activeMonth, this.currentRecord.receiverId);
+                    if (duplicatedMonth !== null) {
+                        const member = this.members.find(m => m.id === this.currentRecord.receiverId);
+                        const memberName = member ? member.name : '選択されたメンバー';
+                        alert(`${memberName} さんは既に ${duplicatedMonth} 月の取得者として設定されています。重複して設定することはできません。`);
+                        return;
+                    }
+
                     // 開催日時と場所が入力されていれば完了とする
                     if (this.currentRecord.datetime && this.currentRecord.place) {
                         this.currentRecord.isCompleted = true;
@@ -925,6 +934,17 @@
                     }
                     return false;
                 },
+                // 指定した月以外で、同じメンバーが既に取得者になっているかチェック
+                checkReceiverDuplication(targetMonth, receiverId) {
+                    if (!receiverId) return null;
+                    for (let m = 1; m <= 12; m++) {
+                        if (m === Number(targetMonth)) continue;
+                        if (this.isReceiver(m, receiverId)) {
+                            return m; // 重複している月を返す
+                        }
+                    }
+                    return null;
+                },
                 // スマホカード表示用: そのメンバーが取得者だった月の一覧を返す
                 getMemberReceiverMonths(memberId) {
                     const months = [];
@@ -974,6 +994,17 @@
                 // 幹事一括指定パネル用: 指定月の幹事・取得者のみ保存する
                 saveMonthManager(month) {
                     this.initRecordForMonth(month);
+
+                    // 取得者の重複チェック
+                    const record = this.records[month];
+                    const duplicatedMonth = this.checkReceiverDuplication(month, record.receiverId);
+                    if (duplicatedMonth !== null) {
+                        const member = this.members.find(m => m.id === record.receiverId);
+                        const memberName = member ? member.name : '選択されたメンバー';
+                        alert(`${memberName} さんは既に ${duplicatedMonth} 月の取得者として設定されています。重複して設定することはできません。`);
+                        return;
+                    }
+
                     localStorage.setItem(`moai_records_${this.activeYear}`, JSON.stringify(this.records));
                     // 完了判定は開催日時・場所の有無で決まるため、ここでは更新しない
                     const msg = `${month}月の設定を保存しました。`;
