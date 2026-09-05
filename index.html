@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOAI NOTE - 沖縄模合管理</title>
+    <title>ディオニソス模合 - 酒の神と野球人の模合ノート</title>
     <!-- Tailwind CSS (v3 CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js (状態管理とUIバインディングをシンプルにするために使用) -->
+    <!-- Alpine.js (状態管理とUIバインディング) -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- FontAwesome -->
+    <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
@@ -17,12 +17,27 @@
             theme: {
                 extend: {
                     colors: {
-                        moai: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            900: '#0c4a6e',
+                        // ディオニソス（酒の神）：深みのあるワインレッド＆ボルドー
+                        dionysus: {
+                            50: '#fdf2f4',
+                            100: '#fce7ea',
+                            200: '#f9d0d7',
+                            500: '#be123c',
+                            600: '#9f1239',
+                            700: '#881337',
+                            800: '#70102e',
+                            900: '#4c0519',
+                        },
+                        // 野球（スタジアム・ナイトゲーム）：重厚なネイビー
+                        stadium: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        // チャンピオン＆ビールのゴールド
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
                         }
                     }
                 }
@@ -34,28 +49,47 @@
             display: none !important;
         }
 
-        .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
         }
     </style>
 </head>
 
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-20" x-data="moaiApp()">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-24 md:pb-12" x-data="moaiApp()">
 
-    <!-- ログイン画面 -->
-    <div x-show="!isLoggedIn" class="min-h-screen flex items-center justify-center bg-slate-100 fixed inset-0 z-[100]">
-        <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-sm text-center">
-            <h1 class="text-2xl font-bold mb-6 text-moai-600"><i class="fa-solid fa-beer-mug-empty mr-2"></i>MOAI NOTE
-            </h1>
+    <!-- ========================================== -->
+    <!-- ログイン画面                                -->
+    <!-- ========================================== -->
+    <div x-show="!isLoggedIn" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-stadium-900 via-dionysus-900 to-stadium-900 fixed inset-0 z-[100] px-4">
+        <div class="bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-white/40">
+            <!-- アイコン & タイトル -->
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-dionysus-100 text-dionysus-700 mb-4 shadow-inner">
+                <span class="text-3xl">🍷</span>
+                <span class="text-xl -ml-2">⚾</span>
+            </div>
+            <h1 class="text-2xl font-black tracking-wide text-dionysus-800">DIONYSUS MOAI</h1>
+            <p class="text-xs text-slate-500 font-bold tracking-widest mt-1 mb-6">酒の神 × 草野球人の模合ノート</p>
 
-            <!-- 名前選択 -->
+            <!-- メンバー選択 -->
             <div class="mb-4 text-left">
-                <label class="block text-sm text-gray-600 mb-1 font-bold">あなたの名前</label>
+                <label class="block text-xs font-bold text-slate-600 mb-1">
+                    <i class="fa-solid fa-user mr-1 text-dionysus-600"></i>お名前を選択
+                </label>
                 <select x-model="loginMemberInput"
-                    class="w-full border rounded p-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-moai-500 text-center text-lg">
+                    class="w-full border-2 border-slate-200 rounded-xl p-3 bg-slate-50 focus:bg-white focus:border-dionysus-600 focus:outline-none text-center text-base font-bold transition-all">
                     <option value="">-- 管理者としてログイン --</option>
                     <template x-for="member in activeMembers" :key="member.id">
                         <option :value="member.id" x-text="member.name"></option>
@@ -63,303 +97,487 @@
                 </select>
             </div>
 
-            <p class="text-gray-600 mb-2 text-sm">パスワードを入力してください</p>
-            <input type="password" x-model="passwordInput" placeholder="一般: 0000 / 管理者: 8888"
-                class="w-full border rounded p-3 mb-4 text-center text-xl tracking-widest bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-moai-500"
-                @keyup.enter="login">
+            <!-- パスワード入力 -->
+            <div class="mb-5 text-left">
+                <label class="block text-xs font-bold text-slate-600 mb-1">
+                    <i class="fa-solid fa-key mr-1 text-dionysus-600"></i>パスワード
+                </label>
+                <input type="password" x-model="passwordInput" placeholder="一般: 0000 / 管理者: 8888"
+                    class="w-full border-2 border-slate-200 rounded-xl p-3 text-center text-lg tracking-widest bg-slate-50 focus:bg-white focus:border-dionysus-600 focus:outline-none font-bold transition-all"
+                    @keyup.enter="login">
+            </div>
+
+            <!-- ログインボタン -->
             <button @click="login"
-                class="w-full bg-moai-600 hover:bg-moai-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors">ログイン</button>
-            <p x-show="loginError" x-cloak class="text-red-500 text-sm mt-3 font-bold">名前の選択、またはパスワードが間違っています。</p>
+                class="w-full bg-gradient-to-r from-dionysus-700 to-dionysus-600 hover:from-dionysus-800 hover:to-dionysus-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>プレイボール（ログイン）</span>
+            </button>
+            <p x-show="loginError" x-cloak class="text-red-600 text-xs mt-3 font-bold bg-red-50 py-1.5 px-2 rounded-lg border border-red-200">
+                名前の選択、またはパスワードが間違っています。
+            </p>
         </div>
     </div>
 
-    <!-- メインアプリケーション (ログイン後) -->
+    <!-- ========================================== -->
+    <!-- メインアプリケーション (ログイン後)          -->
+    <!-- ========================================== -->
     <div x-show="isLoggedIn" x-cloak>
 
         <!-- トースト通知 -->
         <div x-show="toastMessage" x-cloak
-            class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] bg-gray-800 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 transition-all"
-            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4"
+            class="fixed top-20 left-1/2 -translate-x-1/2 z-[200] bg-stadium-900/95 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 backdrop-blur-md transition-all"
+            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-4"
             x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-            <i class="fa-solid fa-check-circle text-green-400"></i>
+            <span class="text-gold-400 text-base">⚾</span>
             <span x-text="toastMessage"></span>
         </div>
 
-        <!-- Header -->
-        <header class="bg-moai-600 text-white shadow-md sticky top-0 z-50">
-            <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-                <h1 class="text-xl font-bold tracking-wider cursor-pointer hover:opacity-80 transition-opacity"
-                    @click="currentTab = 'menu'" title="ホームへ戻る"><i class="fa-solid fa-beer-mug-empty mr-2"></i>MOAI NOTE
-                </h1>
-
-                <!-- 年度・ロール切り替え -->
-                <div class="flex items-center space-x-4">
-                    <!-- 年度選択 -->
-                    <div class="flex items-center space-x-2 text-sm">
-                        <label for="year-select" class="hidden sm:block">年度:</label>
-                        <select id="year-select" :value="activeYear" @change="changeYear($event.target.value)"
-                            class="bg-moai-500 border border-moai-500 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-white">
-                            <option value="2024">令和6年 (2024)</option>
-                            <option value="2025">令和7年 (2025)</option>
-                            <option value="2026">令和8年 (2026)</option>
-                            <option value="2027">令和9年 (2027)</option>
-                            <option value="2028">令和10年 (2028)</option>
-                        </select>
+        <!-- ヘッダー -->
+        <header class="bg-gradient-to-r from-stadium-900 via-dionysus-900 to-stadium-900 text-white shadow-lg sticky top-0 z-50 border-b border-dionysus-800">
+            <div class="max-w-5xl mx-auto px-4 py-2.5 flex justify-between items-center">
+                <!-- ロゴ・タイトル -->
+                <div class="flex items-center space-x-2 cursor-pointer hover:opacity-90 transition-opacity" @click="currentTab = 'menu'">
+                    <span class="text-2xl">🍷</span>
+                    <div>
+                        <h1 class="text-lg font-black tracking-wider leading-none">DIONYSUS</h1>
+                        <span class="text-[10px] text-gold-400 font-bold tracking-widest uppercase">Baseball & Wine Moai</span>
                     </div>
+                </div>
 
-                    <!-- ログイン状態の表示 -->
-                    <div class="flex items-center space-x-2 text-sm bg-moai-700 px-3 py-1.5 rounded-lg shadow-inner">
-                        <span class="font-bold flex items-center">
-                            <i class="fa-solid fa-user mr-1.5 opacity-85"></i>
+                <!-- ヘッダー右側（年度選択・ログイン中ユーザー） -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <!-- 年度選択 -->
+                    <select :value="activeYear" @change="changeYear($event.target.value)"
+                        class="bg-black/30 border border-white/20 text-white rounded-lg px-2 py-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-gold-400">
+                        <option value="2024" class="text-slate-800">令和6年 (2024)</option>
+                        <option value="2025" class="text-slate-800">令和7年 (2025)</option>
+                        <option value="2026" class="text-slate-800">令和8年 (2026)</option>
+                        <option value="2027" class="text-slate-800">令和9年 (2027)</option>
+                        <option value="2028" class="text-slate-800">令和10年 (2028)</option>
+                    </select>
+
+                    <!-- ユーザー状態バッジ -->
+                    <div class="flex items-center space-x-1.5 bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 text-xs">
+                        <span class="font-bold flex items-center truncate max-w-[90px] sm:max-w-[120px]">
                             <span x-text="getLoggedInMemberName()"></span>
                         </span>
-                        <span class="text-xs px-2 py-0.5 rounded font-bold"
-                            :class="{'bg-red-500 text-white': currentRole === 'admin', 'bg-yellow-400 text-slate-900': currentRole === 'manager', 'bg-slate-500 text-white': currentRole === 'member'}">
-                            <span
-                                x-text="currentRole === 'admin' ? '管理者' : (currentRole === 'manager' ? '幹事' : '閲覧メンバー')"></span>
+                        <!-- ロールバッジ -->
+                        <span class="text-[10px] px-1.5 py-0.5 rounded font-bold"
+                            :class="{
+                                'bg-red-600 text-white': currentRole === 'admin',
+                                'bg-gold-500 text-stadium-900 font-black animate-pulse': currentRole === 'manager',
+                                'bg-slate-600 text-white': currentRole === 'member'
+                            }">
+                            <span x-text="currentRole === 'admin' ? '管理者' : (currentRole === 'manager' ? '今月幹事' : 'メンバー')"></span>
                         </span>
-                        <button @click="logout()"
-                            class="ml-2 text-xs font-normal underline hover:text-red-200 transition-colors"
-                            title="ログアウト">
-                            <i class="fa-solid fa-right-from-bracket mr-0.5"></i>ログアウト
+                        <button @click="logout()" class="text-slate-300 hover:text-red-300 ml-1" title="ログアウト">
+                            <i class="fa-solid fa-right-from-bracket"></i>
                         </button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="max-w-5xl mx-auto px-4 py-6">
+        <!-- メインコンテンツ -->
+        <main class="max-w-5xl mx-auto px-4 py-5">
 
-            <!-- Navigation Tabs -->
-            <nav class="flex space-x-1 sm:space-x-4 mb-6 overflow-x-auto pb-2" x-show="currentTab !== 'menu'">
+            <!-- PC用上部ナビゲーションタブ (sm以上で表示) -->
+            <nav class="hidden md:flex space-x-2 mb-6 border-b border-slate-200 pb-3">
                 <button @click="currentTab = 'menu'"
-                    class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap bg-white text-gray-600 hover:bg-gray-50 border border-gray-200">
-                    <i class="fa-solid fa-home mr-1"></i> ホーム
-                </button>
-                <button @click="currentTab = 'dashboard'"
-                    :class="{'bg-moai-600 text-white': currentTab === 'dashboard', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'dashboard'}"
-                    class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
-                    <i class="fa-solid fa-clock-rotate-left mr-1"></i> 取得履歴
-                </button>
-                <button @click="currentTab = 'meeting'" x-show="currentRole === 'admin' || currentRole === 'manager'"
-                    :class="{'bg-moai-600 text-white': currentTab === 'meeting', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'meeting'}"
-                    class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
-                    <i class="fa-solid fa-calendar-check mr-1"></i> 開催管理
+                    :class="{'bg-dionysus-700 text-white shadow': currentTab === 'menu', 'bg-white text-slate-700 hover:bg-slate-100': currentTab !== 'menu'}"
+                    class="px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border border-slate-200">
+                    <i class="fa-solid fa-home"></i> ホーム
                 </button>
                 <button @click="currentTab = 'user_view'"
-                    :class="{'bg-moai-600 text-white': currentTab === 'user_view', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'user_view'}"
-                    class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
-                    <i class="fa-solid fa-user mr-1"></i> ユーザー閲覧
+                    :class="{'bg-dionysus-700 text-white shadow': currentTab === 'user_view', 'bg-white text-slate-700 hover:bg-slate-100': currentTab !== 'user_view'}"
+                    class="px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border border-slate-200">
+                    <i class="fa-solid fa-calendar-day"></i> 開催情報
+                </button>
+                <button @click="currentTab = 'dashboard'"
+                    :class="{'bg-dionysus-700 text-white shadow': currentTab === 'dashboard', 'bg-white text-slate-700 hover:bg-slate-100': currentTab !== 'dashboard'}"
+                    class="px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border border-slate-200">
+                    <i class="fa-solid fa-clock-rotate-left"></i> 取得履歴
+                </button>
+                <button @click="currentTab = 'meeting'" x-show="currentRole === 'admin' || currentRole === 'manager'"
+                    :class="{'bg-gold-500 text-stadium-900 shadow font-black': currentTab === 'meeting', 'bg-white text-slate-700 hover:bg-slate-100': currentTab !== 'meeting'}"
+                    class="px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border border-slate-200">
+                    <i class="fa-solid fa-clipboard-check"></i> 開催管理（幹事）
                 </button>
                 <button @click="currentTab = 'members'" x-show="currentRole === 'admin'"
-                    :class="{'bg-moai-600 text-white': currentTab === 'members', 'bg-white text-gray-600 hover:bg-gray-50': currentTab !== 'members'}"
-                    class="px-4 py-2 rounded-lg shadow-sm font-medium transition-colors whitespace-nowrap border border-gray-200">
-                    <i class="fa-solid fa-users mr-1"></i> メンバー管理
+                    :class="{'bg-stadium-900 text-white shadow': currentTab === 'members', 'bg-white text-slate-700 hover:bg-slate-100': currentTab !== 'members'}"
+                    class="px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border border-slate-200">
+                    <i class="fa-solid fa-baseball-bat-ball"></i> 模合管理（管理者）
                 </button>
             </nav>
 
-            <!-- Tab: Menu (ホーム画面) -->
-            <div x-show="currentTab === 'menu'" x-cloak
-                class="min-h-[60vh] flex flex-col items-center justify-center space-y-6">
-                <h2 class="text-2xl font-bold text-gray-700 mb-8">メインメニュー</h2>
+            <!-- ==================================================== -->
+            <!-- Tab: Menu (ホーム画面)                              -->
+            <!-- ==================================================== -->
+            <div x-show="currentTab === 'menu'" x-cloak class="space-y-6 max-w-2xl mx-auto">
 
-                <button @click="currentTab = 'meeting'" x-show="currentRole === 'admin' || currentRole === 'manager'"
-                    class="w-full max-w-xs bg-moai-600 hover:bg-moai-700 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
-                    <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-calendar-check text-3xl"></i>
-                    </div>
-                    <div class="flex-1 text-left">
-                        <div>開催管理 <span class="text-sm font-normal ml-2 bg-white/20 px-2 py-1 rounded">閲覧・編集</span>
+                <!-- 1. じぶん専用情報（マイステータス）カード -->
+                <div x-show="loggedInMemberId" class="bg-gradient-to-br from-white to-dionysus-50 rounded-2xl shadow-md border-2 border-dionysus-200 p-5 space-y-4">
+                    <!-- ヘッダー行 -->
+                    <div class="flex items-center justify-between border-b border-dionysus-100 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-9 h-9 rounded-full bg-dionysus-700 text-white flex items-center justify-center font-black text-sm">
+                                ⚾
+                            </span>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-base" x-text="getLoggedInMemberName() + ' 選手のステータス'"></h3>
+                                <p class="text-xs text-slate-500">令和<span x-text="getReiwaYear()"></span>年度 登録情報</p>
+                            </div>
                         </div>
-                        <div class="text-sm font-normal mt-1 opacity-90">次回幹事: <span
-                                x-text="getCurrentManagerName()"></span></div>
-                    </div>
-                </button>
-
-                <button @click="currentTab = 'user_view'"
-                    class="w-full max-w-xs bg-emerald-500 hover:bg-emerald-600 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
-                    <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-user text-3xl"></i></div>
-                    ユーザー <span class="text-sm font-normal ml-auto bg-white/20 px-2 py-1 rounded">閲覧</span>
-                </button>
-
-                <button @click="currentTab = 'dashboard'"
-                    class="w-full max-w-xs bg-indigo-500 hover:bg-indigo-600 text-white p-5 rounded-2xl shadow-lg flex items-center text-xl font-bold transition-transform hover:scale-105">
-                    <div class="bg-white/20 p-3 rounded-xl mr-4"><i class="fa-solid fa-clock-rotate-left text-3xl"></i>
-                    </div>
-                    取得履歴
-                </button>
-            </div>
-
-            <!-- Tab: Dashboard -->
-            <div x-show="currentTab === 'dashboard'" x-cloak class="space-y-6">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                    <h2 class="text-lg font-bold border-b pb-2 mb-4 text-gray-700">
-                        <i class="fa-solid fa-clock-rotate-left mr-1 text-indigo-400"></i>令和<span
-                            x-text="getReiwaYear()"></span>年度 取得履歴
-                    </h2>
-
-                    <!-- 凡例 -->
-                    <div class="mb-4 flex space-x-4 text-sm text-gray-600">
-                        <div class="flex items-center"><span
-                                class="w-4 h-4 rounded-full bg-yellow-400 mr-1.5 shadow-sm inline-block"></span> 取得者
+                        <!-- 今月幹事バッジ（該当者のみ） -->
+                        <div x-show="isCurrentMonthManager()" class="bg-gradient-to-r from-gold-500 to-amber-400 text-stadium-900 px-3 py-1 rounded-full text-xs font-black shadow-md flex items-center gap-1.5 animate-bounce">
+                            <span>👑</span>
+                            <span>今月幹事担当！</span>
                         </div>
-                        <div class="flex items-center"><span
-                                class="w-4 h-4 rounded-full bg-moai-500 mr-1.5 shadow-sm inline-block"></span> 幹事</div>
                     </div>
 
-                    <!-- ── PC用: テーブル表示 (sm以上で表示) ── -->
-                    <div class="hidden sm:block overflow-x-auto">
-                        <table class="min-w-full text-sm text-center border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50">
-                                    <th class="border p-2 sticky left-0 bg-slate-50 z-10 w-24">メンバー</th>
-                                    <template x-for="month in 12">
-                                        <th class="border p-2 min-w-[60px]" x-text="month + '月'"></th>
-                                    </template>
-                                    <th class="border p-2 bg-moai-50">取得者</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template x-for="member in getDashboardMembers()" :key="member.id">
-                                    <tr>
-                                        <td class="border p-2 sticky left-0 bg-white z-10 font-medium"
-                                            x-text="member.name"></td>
-                                        <template x-for="month in 12">
-                                            <td class="border p-1">
-                                                <div class="flex flex-col items-center justify-center space-y-1">
-                                                    <span x-show="isReceiver(month, member.id)"
-                                                        class="w-6 h-6 rounded-full bg-yellow-400 text-white flex items-center justify-center text-xs shadow-sm"
-                                                        title="取得者"><i class="fa-solid fa-coins"></i></span>
-                                                    <span x-show="isManager(month, member.id)"
-                                                        class="w-6 h-6 rounded-full bg-moai-500 text-white flex items-center justify-center text-xs shadow-sm"
-                                                        title="幹事"><i class="fa-solid fa-flag"></i></span>
-                                                </div>
-                                            </td>
-                                        </template>
-                                        <td class="border p-2 font-bold"
-                                            :class="hasReceived(member.id) ? 'text-green-600' : 'text-gray-400'">
-                                            <span x-text="hasReceived(member.id) ? '取得済' : '未取得'"></span>
-                                        </td>
-                                    </tr>
+                    <!-- 自分の予定サマリー（グリッド表示） -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- 受給月 -->
+                        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-coins text-gold-500"></i> 受給予定月
+                            </div>
+                            <div class="text-base font-black text-dionysus-800" x-text="getMyReceiverMonthText()"></div>
+                        </div>
+                        <!-- 幹事担当月 -->
+                        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-flag text-dionysus-600"></i> 幹事担当月
+                            </div>
+                            <div class="text-base font-black text-slate-800" x-text="getMyManagerMonthText()"></div>
+                        </div>
+                    </div>
+
+                    <!-- 取得希望月の登録・変更 -->
+                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-hand-holding-dollar text-gold-500"></i>
+                                あなたの取得希望月
+                            </label>
+                            <p class="text-[11px] text-slate-400">希望を登録しておくと管理者が年間予定を組みやすくなります</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select :value="getMyPreferredMonth()" @change="setMyPreferredMonth($event.target.value)"
+                                class="border-2 border-slate-200 rounded-lg p-2 text-sm font-bold bg-slate-50 focus:bg-white focus:border-dionysus-600 focus:outline-none">
+                                <option value="">未指定（希望なし）</option>
+                                <template x-for="month in 12" :key="month">
+                                    <option :value="month" x-text="month + '月希望'"></option>
                                 </template>
-                            </tbody>
-                        </table>
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- ── スマホ用: カード表示 (sm未満で表示) ── -->
-                    <div class="sm:hidden space-y-3">
-                        <template x-for="member in getDashboardMembers()" :key="member.id">
-                            <div class="rounded-xl border p-4 transition-all"
-                                :class="hasReceived(member.id) ? 'border-green-200 bg-green-50' : 'border-slate-200 bg-slate-50'">
-                                <!-- ヘッダー行: 名前 + 取得済バッジ -->
-                                <div class="flex items-center justify-between mb-3">
-                                    <span class="font-bold text-gray-800 text-base" x-text="member.name"></span>
-                                    <span class="text-xs font-bold px-2.5 py-1 rounded-full"
-                                        :class="hasReceived(member.id) ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'"
-                                        x-text="hasReceived(member.id) ? '✓ 取得済' : '未取得'"></span>
-                                </div>
+                    <!-- 今回（当月）の出欠回答欄 -->
+                    <div class="bg-white p-4 rounded-xl border-2 border-dashed border-dionysus-300 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">📋</span>
+                                <h4 class="font-bold text-sm text-slate-800">
+                                    第<span x-text="activeMonth"></span>回（今月）の出欠回答
+                                </h4>
+                            </div>
+                            <span class="text-xs font-bold text-dionysus-700" x-text="'開催日: ' + (formatDateShort(currentRecord.datetime) || '未定')"></span>
+                        </div>
 
-                                <!-- 取得履歴情報（横並び） -->
-                                <div class="grid grid-cols-2 gap-4">
-                                    <!-- 取得月タグ（開催日付付き） -->
-                                    <div x-show="getMemberReceiverDetails(member.id).length > 0">
-                                        <p class="text-xs text-gray-500 mb-1.5 font-bold"><i
-                                                class="fa-solid fa-coins mr-1 text-yellow-400"></i>取得月</p>
-                                        <div class="flex flex-col gap-1.5">
-                                            <template x-for="detail in getMemberReceiverDetails(member.id)"
-                                                :key="detail.month">
-                                                <div class="flex items-center gap-2">
-                                                    <span
-                                                        class="text-xs bg-yellow-400 text-white font-bold px-2.5 py-1 rounded-full shadow-sm whitespace-nowrap"
-                                                        x-text="detail.month + '月'"></span>
-                                                    <span class="text-xs text-gray-600" x-show="detail.date"
-                                                        x-text="detail.date"></span>
-                                                    <span class="text-xs text-gray-400 italic"
-                                                        x-show="!detail.date">日程未定</span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <!-- 幹事担当月タグ -->
-                                    <div x-show="getMemberManagerMonths(member.id).length > 0">
-                                        <p class="text-xs text-gray-500 mb-1.5 font-bold"><i
-                                                class="fa-solid fa-flag mr-1 text-moai-500"></i>幹事担当月</p>
-                                        <div class="flex flex-wrap gap-1.5">
-                                            <template x-for="month in getMemberManagerMonths(member.id)" :key="month">
-                                                <span
-                                                    class="text-xs bg-moai-500 text-white font-bold px-2.5 py-1 rounded-full shadow-sm"
-                                                    x-text="month + '月'"></span>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 何もない場合 -->
-                                <div
-                                    x-show="getMemberReceiverDetails(member.id).length === 0 && getMemberManagerMonths(member.id).length === 0">
-                                    <p class="text-xs text-gray-400 italic">担当履歴なし</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <!-- 本人出席トグル -->
+                            <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span class="text-xs font-bold text-slate-700">本人参加（出欠）</span>
+                                <div class="flex items-center gap-2">
+                                    <button @click="setMyAttendance(true)"
+                                        :class="getMyAttendance().member ? 'bg-dionysus-700 text-white shadow font-bold' : 'bg-white text-slate-500 border border-slate-300'"
+                                        class="px-3 py-1 rounded text-xs transition-colors">
+                                        参加
+                                    </button>
+                                    <button @click="setMyAttendance(false)"
+                                        :class="!getMyAttendance().member ? 'bg-slate-700 text-white shadow font-bold' : 'bg-white text-slate-500 border border-slate-300'"
+                                        class="px-3 py-1 rounded text-xs transition-colors">
+                                        不参加
+                                    </button>
                                 </div>
                             </div>
-                        </template>
+
+                            <!-- 同伴家族人数 -->
+                            <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span class="text-xs font-bold text-slate-700">家族・同伴人数</span>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" min="0" max="10"
+                                        :value="getMyAttendance().family"
+                                        @change="setMyFamilyCount($event.target.value)"
+                                        class="w-14 border rounded p-1 text-center font-bold bg-white text-sm">
+                                    <span class="text-xs text-slate-600">名</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- メインメニューボタン -->
+                <div class="space-y-3 pt-2">
+                    <!-- 開催管理（幹事・管理者向け） -->
+                    <button @click="currentTab = 'meeting'" x-show="currentRole === 'admin' || currentRole === 'manager'"
+                        class="w-full bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-600 hover:to-amber-600 text-stadium-900 p-4 rounded-2xl shadow-md flex items-center justify-between font-black transition-transform active:scale-[0.99]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-black/10 flex items-center justify-center text-2xl">
+                                📋
+                            </div>
+                            <div class="text-left">
+                                <div class="text-lg leading-tight">開催管理・集金チェック</div>
+                                <div class="text-xs text-stadium-800 font-bold mt-0.5">日程・場所の入力と参加者集金</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-stadium-900/60"></i>
+                    </button>
+
+                    <!-- 開催情報（一般閲覧） -->
+                    <button @click="currentTab = 'user_view'"
+                        class="w-full bg-gradient-to-r from-dionysus-700 to-dionysus-800 hover:from-dionysus-800 hover:to-dionysus-900 text-white p-4 rounded-2xl shadow-md flex items-center justify-between font-bold transition-transform active:scale-[0.99]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl">
+                                🍷
+                            </div>
+                            <div class="text-left">
+                                <div class="text-lg leading-tight">開催情報（閲覧）</div>
+                                <div class="text-xs text-dionysus-200 font-normal mt-0.5">今月の日時・場所・参加者リスト</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-white/60"></i>
+                    </button>
+
+                    <!-- 取得履歴 -->
+                    <button @click="currentTab = 'dashboard'"
+                        class="w-full bg-gradient-to-r from-stadium-800 to-stadium-900 hover:from-stadium-900 hover:to-black text-white p-4 rounded-2xl shadow-md flex items-center justify-between font-bold transition-transform active:scale-[0.99]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl">
+                                ⚾
+                            </div>
+                            <div class="text-left">
+                                <div class="text-lg leading-tight">年間取得履歴・星取表</div>
+                                <div class="text-xs text-slate-300 font-normal mt-0.5">誰が何月に取ったか・受給状況</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-white/60"></i>
+                    </button>
+
+                    <!-- 模合管理（管理者専用） -->
+                    <button @click="currentTab = 'members'" x-show="currentRole === 'admin'"
+                        class="w-full bg-white hover:bg-slate-50 text-slate-800 border-2 border-slate-300 p-4 rounded-2xl shadow-sm flex items-center justify-between font-bold transition-transform active:scale-[0.99]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl">
+                                ⚙️
+                            </div>
+                            <div class="text-left">
+                                <div class="text-base text-slate-900">管理者メニュー</div>
+                                <div class="text-xs text-slate-500 font-normal mt-0.5">幹事一括指定・メンバー管理・消化率</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-400"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================================================== -->
+            <!-- Tab: User View (一般メンバー用 開催情報)             -->
+            <!-- ==================================================== -->
+            <div x-show="currentTab === 'user_view'" x-cloak class="space-y-5 max-w-2xl mx-auto">
+
+                <!-- 月セレクター & 「今月」ジャンプボタン -->
+                <div class="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-200 p-3">
+                    <button @click="prevMonth" class="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <div class="text-center">
+                        <div class="text-xs font-bold text-slate-400" x-text="'令和' + getReiwaYear() + '年度'"></div>
+                        <h2 class="text-xl font-black text-slate-800" x-text="'第' + activeMonth + '回 (' + activeMonth + '月)'"></h2>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button @click="goToCurrentMonth" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-lg border border-slate-300 transition-colors" title="今月へジャンプ">
+                            今月
+                        </button>
+                        <button @click="nextMonth" class="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 開催情報カード -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-5">
+                    <!-- ステータスバッジ -->
+                    <div class="flex items-center justify-between border-b pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🍻</span>
+                            <h3 class="font-black text-slate-800 text-lg">開催案内</h3>
+                        </div>
+                        <span class="text-xs font-black px-3 py-1 rounded-full shadow-sm"
+                            :class="currentRecord.isCompleted ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-blue-100 text-blue-800 border border-blue-300'"
+                            x-text="currentRecord.isCompleted ? '✓ 開催決定' : '調整中・予定'">
+                        </span>
+                    </div>
+
+                    <!-- 開催日時 & カレンダー追加 -->
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold text-slate-500">開催日時</span>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <span class="text-xl font-black text-slate-800" x-text="formatDate(currentRecord.datetime) || '日程調整中'"></span>
+                            <!-- 完全無料：Googleカレンダー追加ボタン -->
+                            <a x-show="currentRecord.datetime" :href="getGoogleCalendarUrl()" target="_blank" rel="noopener noreferrer"
+                                class="inline-flex items-center justify-center gap-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 transition-colors w-fit">
+                                <i class="fa-regular fa-calendar-plus text-dionysus-600"></i>
+                                <span>カレンダーに登録 (無料)</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 開催場所 & Googleマップ検索 -->
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold text-slate-500">開催場所</span>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <span class="text-xl font-black text-slate-800" x-text="currentRecord.place || '場所未定'"></span>
+                            <!-- 完全無料：Googleマップ検索リンク -->
+                            <a x-show="currentRecord.place" :href="getGoogleMapUrl(currentRecord.place)" target="_blank" rel="noopener noreferrer"
+                                class="inline-flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 transition-colors w-fit">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <span>Googleマップで開く (無料)</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 担当幹事 & 取得者 -->
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <span class="text-xs text-slate-500 block">担当幹事</span>
+                            <span class="text-base font-black text-slate-800" x-text="getCurrentManagerName()"></span>
+                        </div>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                            <span class="text-xs text-amber-700 block">今月の取得者</span>
+                            <span class="text-base font-black text-amber-900" x-text="getCurrentReceiverName()"></span>
+                        </div>
+                    </div>
+
+                    <!-- 参加人数 & 内訳 -->
+                    <div class="space-y-2 pt-2 border-t">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-500">参加予定人数</span>
+                            <span class="text-lg font-black text-dionysus-700"><span x-text="totalAttendance"></span> 名</span>
+                        </div>
+                        <div class="border rounded-xl p-3 bg-slate-50 space-y-1.5 max-h-48 overflow-y-auto">
+                            <template x-for="member in getAttendanceMembers()" :key="member.id">
+                                <div x-show="currentRecord.attendance[member.id]?.member || (currentRecord.attendance[member.id]?.family > 0)"
+                                    class="flex justify-between items-center text-xs">
+                                    <span class="font-bold text-slate-700" x-text="member.name"></span>
+                                    <div class="text-slate-500 font-medium">
+                                        <span x-show="currentRecord.attendance[member.id]?.member" class="text-green-700 font-bold">本人参加</span>
+                                        <span x-show="currentRecord.attendance[member.id]?.member && currentRecord.attendance[member.id]?.family > 0"> ＋ </span>
+                                        <span x-show="currentRecord.attendance[member.id]?.family > 0" x-text="'家族' + currentRecord.attendance[member.id]?.family + '名'"></span>
+                                    </div>
+                                </div>
+                            </template>
+                            <div x-show="totalAttendance === 0" class="text-slate-400 text-xs italic text-center py-2">
+                                参加予定のメンバーはいません
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 閲覧画面からも自分の出欠を即回答できるエリア -->
+                <div x-show="loggedInMemberId" class="bg-dionysus-50 rounded-2xl border border-dionysus-200 p-4 space-y-2">
+                    <h4 class="text-xs font-bold text-dionysus-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        あなたの出欠状況を変更
+                    </h4>
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex gap-2">
+                            <button @click="setMyAttendance(true)"
+                                :class="getMyAttendance().member ? 'bg-dionysus-700 text-white font-bold' : 'bg-white text-slate-600'"
+                                class="px-3 py-1.5 rounded-lg text-xs border border-slate-300">
+                                参加
+                            </button>
+                            <button @click="setMyAttendance(false)"
+                                :class="!getMyAttendance().member ? 'bg-slate-700 text-white font-bold' : 'bg-white text-slate-600'"
+                                class="px-3 py-1.5 rounded-lg text-xs border border-slate-300">
+                                不参加
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-slate-600">家族同伴:</span>
+                            <input type="number" min="0" max="10"
+                                :value="getMyAttendance().family"
+                                @change="setMyFamilyCount($event.target.value)"
+                                class="w-12 border rounded p-1 text-center font-bold bg-white text-xs">
+                            <span class="text-xs text-slate-600">名</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab: Meeting Management -->
-            <div x-show="currentTab === 'meeting'" x-cloak class="space-y-6">
+            <!-- ==================================================== -->
+            <!-- Tab: Meeting Management (幹事・管理者用 開催管理)     -->
+            <!-- ==================================================== -->
+            <div x-show="currentTab === 'meeting'" x-cloak class="space-y-5 max-w-2xl mx-auto">
 
-                <div
-                    class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 relative flex flex-col items-center justify-center">
-                    <div class="text-sm font-bold text-gray-500 mb-1" x-text="'令和' + getReiwaYear() + '年'"></div>
-                    <div class="flex items-center space-x-4">
-                        <button @click="prevMonth" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><i
-                                class="fa-solid fa-chevron-left"></i></button>
-                        <h2 class="text-2xl font-bold w-48 text-center text-gray-700"
-                            x-text="'第' + activeMonth + '回 (' + activeMonth + '月)'"></h2>
-                        <button @click="nextMonth" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><i
-                                class="fa-solid fa-chevron-right"></i></button>
+                <!-- 月セレクター & 今月ボタン -->
+                <div class="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-200 p-3">
+                    <button @click="prevMonth" class="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-xl">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <div class="text-center">
+                        <div class="text-xs font-bold text-slate-400" x-text="'令和' + getReiwaYear() + '年度'"></div>
+                        <h2 class="text-xl font-black text-slate-800" x-text="'第' + activeMonth + '回 (' + activeMonth + '月)'"></h2>
                     </div>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:block">
-                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold shadow-sm"
-                            x-show="currentRecord.isCompleted">完了</span>
-                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-bold shadow-sm"
-                            x-show="!currentRecord.isCompleted">予定</span>
+                    <div class="flex items-center gap-1">
+                        <button @click="goToCurrentMonth" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-lg border border-slate-300">
+                            今月
+                        </button>
+                        <button @click="nextMonth" class="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-xl">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div class="max-w-2xl mx-auto">
-                    <!-- 基本情報 -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
-                        <h3 class="font-bold border-b pb-2 text-gray-700"><i
-                                class="fa-solid fa-circle-info mr-1"></i>基本情報</h3>
+                <!-- 基本情報入力フォーム -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h3 class="font-black text-slate-700 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info text-dionysus-600"></i>
+                            開催基本情報
+                        </h3>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full"
+                            :class="currentRecord.isCompleted ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'"
+                            x-text="currentRecord.isCompleted ? '完了' : '未確定'">
+                        </span>
+                    </div>
 
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">開催日時</label>
-                            <input type="datetime-local" x-model="currentRecord.datetime" :disabled="!canEdit()"
-                                class="w-full border rounded p-2 bg-gray-50 focus:bg-white disabled:opacity-70">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">開催日時</label>
+                        <input type="datetime-local" x-model="currentRecord.datetime" :disabled="!canEdit()"
+                            class="w-full border rounded-xl p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-dionysus-500 font-medium">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">開催場所（店名・会場名）</label>
+                        <div class="flex gap-2">
+                            <input type="text" x-model="currentRecord.place" :disabled="!canEdit()" placeholder="居酒屋ディオニソス"
+                                class="flex-1 border rounded-xl p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-dionysus-500 font-medium">
+                            <a x-show="currentRecord.place" :href="getGoogleMapUrl(currentRecord.place)" target="_blank" rel="noopener noreferrer"
+                                class="bg-red-50 hover:bg-red-100 text-red-700 px-3 py-2 rounded-xl text-xs font-bold border border-red-200 flex items-center gap-1 whitespace-nowrap">
+                                <i class="fa-solid fa-location-dot"></i> 地図確認
+                            </a>
                         </div>
+                    </div>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm text-gray-600 mb-1">開催場所</label>
-                            <input type="text" x-model="currentRecord.place" :disabled="!canEdit()" placeholder="居酒屋〇〇"
-                                class="w-full border rounded p-2 bg-gray-50 focus:bg-white disabled:opacity-70">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">模合金額 (1人)</label>
-                            <div class="flex items-center">
-                                <input type="number" x-model="currentRecord.amount" :disabled="!canEdit()"
-                                    class="w-full border rounded-l p-2 bg-gray-50 focus:bg-white text-right disabled:opacity-70">
-                                <span class="bg-gray-200 border border-l-0 rounded-r p-2">円</span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">今月の幹事</label>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">今月の幹事</label>
                             <select x-model="currentRecord.managerId" :disabled="!canEdit()"
-                                class="w-full border rounded p-2 bg-gray-50 focus:bg-white disabled:opacity-70">
+                                class="w-full border rounded-xl p-2.5 bg-slate-50 focus:bg-white font-medium">
                                 <option value="">-- 選択 --</option>
                                 <template x-for="member in activeMembers" :key="member.id">
                                     <option :value="member.id" x-text="member.name"></option>
@@ -368,200 +586,72 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm text-gray-600 mb-1">今月の取得者</label>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">今月の取得者</label>
                             <select x-model="currentRecord.receiverId" :disabled="!canEdit()"
-                                class="w-full border rounded p-2 bg-gray-50 focus:bg-white disabled:opacity-70 border-yellow-400">
+                                class="w-full border-2 border-gold-400 rounded-xl p-2.5 bg-amber-50 focus:bg-white font-bold text-amber-900">
                                 <option value="">-- 未定 --</option>
                                 <template x-for="member in getUnreceivedMembers()" :key="member.id">
-                                    <option :value="member.id" x-text="member.name"></option>
+                                    <option :value="member.id" x-text="member.name + (member.preferredMonth ? ' (' + member.preferredMonth + '月希望)' : '')"></option>
                                 </template>
                             </select>
-                        </div>
-
-                        <div class="pt-4 border-t mt-4 flex justify-end space-x-3" x-show="canEdit()">
-                            <button @click="saveRecord()"
-                                class="bg-moai-600 hover:bg-moai-700 text-white px-6 py-2 rounded-lg font-bold shadow-md transition-colors"><i
-                                    class="fa-solid fa-save mr-1"></i> 保存</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 参加人数集計 -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 overflow-hidden">
-                    <div class="flex justify-between items-center border-b pb-2 mb-4">
-                        <h3 class="font-bold text-gray-700"><i class="fa-solid fa-users-line mr-1"></i>参加人数入力・集計</h3>
-                        <div class="text-sm font-bold bg-moai-50 text-moai-700 px-3 py-1 rounded-lg">
-                            総参加人数: <span class="text-lg" x-text="totalAttendance"></span> 名
+                <!-- 参加人数 & 集金管理チェックリスト（2-② 幹事向け機能） -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 gap-2">
+                        <div>
+                            <h3 class="font-black text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-users-line text-dionysus-600"></i>
+                                出欠・集金管理
+                            </h3>
+                            <p class="text-xs text-slate-400">参加確認と、模合代の回収チェックを行えます</p>
+                        </div>
+                        <!-- 回収進捗メーター -->
+                        <div class="bg-gold-50 border border-gold-300 px-3 py-1.5 rounded-xl text-xs font-bold text-stadium-900 flex items-center gap-2">
+                            <span>💰 集金進捗:</span>
+                            <span class="text-base text-dionysus-700 font-black" x-text="getPaidCount() + ' / ' + getAttendingMemberCount()"></span>
+                            <span>名完了</span>
                         </div>
                     </div>
 
+                    <!-- 参加者・集金一覧テーブル -->
                     <div class="overflow-x-auto">
-                        <table class="min-w-full text-sm">
+                        <table class="min-w-full text-xs">
                             <thead>
-                                <tr class="bg-slate-50 text-gray-600">
-                                    <th class="p-2 text-left w-1/3">メンバー</th>
-                                    <th class="p-2 text-center w-1/3">本人参加</th>
-                                    <th class="p-2 text-center w-1/3">家族(同伴)人数</th>
+                                <tr class="bg-slate-50 text-slate-600 border-b">
+                                    <th class="p-2.5 text-left font-bold">メンバー</th>
+                                    <th class="p-2.5 text-center font-bold">本人出席</th>
+                                    <th class="p-2.5 text-center font-bold">同伴家族</th>
+                                    <th class="p-2.5 text-center font-bold">集金ステータス</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <template x-for="member in getAttendanceMembers()" :key="member.id">
-                                    <tr class="border-b hover:bg-slate-50">
-                                        <td class="p-2 font-medium" x-text="member.name"></td>
-                                        <td class="p-2 text-center">
-                                            <input type="checkbox" x-model="currentRecord.attendance[member.id].member"
-                                                :disabled="!canEdit()" class="w-5 h-5 text-moai-600 rounded">
+                                    <tr class="border-b hover:bg-slate-50 transition-colors"
+                                        :class="currentRecord.attendance[member.id]?.isPaid ? 'bg-green-50/50' : ''">
+                                        <td class="p-2.5 font-bold text-slate-800">
+                                            <span x-text="member.name"></span>
+                                            <span x-show="member.id === currentRecord.receiverId" class="ml-1 text-[10px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold">受給者</span>
                                         </td>
-                                        <td class="p-2 text-center">
-                                            <input type="number" min="0"
-                                                x-model.number="currentRecord.attendance[member.id].family"
-                                                :disabled="!canEdit()"
-                                                class="w-16 border rounded p-1 text-center bg-gray-50 focus:bg-white disabled:opacity-70">
+                                        <td class="p-2.5 text-center">
+                                            <input type="checkbox" x-model="currentRecord.attendance[member.id].member" :disabled="!canEdit()"
+                                                class="w-4 h-4 text-dionysus-600 rounded focus:ring-dionysus-500">
                                         </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="pt-4 border-t mt-4 flex justify-end space-x-3" x-show="canEdit()">
-                        <button @click="saveRecord()"
-                            class="bg-moai-600 hover:bg-moai-700 text-white px-6 py-2 rounded-lg font-bold shadow-md transition-colors"><i
-                                class="fa-solid fa-save mr-1"></i> 保存</button>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Tab: User View -->
-            <div x-show="currentTab === 'user_view'" x-cloak class="space-y-6 max-w-2xl mx-auto">
-                <div class="flex flex-col items-center bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <div class="text-sm font-bold text-gray-500 mb-1" x-text="'令和' + getReiwaYear() + '年'"></div>
-                    <div class="flex items-center space-x-4 mx-auto">
-                        <button @click="prevMonth" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><i
-                                class="fa-solid fa-chevron-left"></i></button>
-                        <h2 class="text-2xl font-bold w-48 text-center text-gray-700"
-                            x-text="'第' + activeMonth + '回 (' + activeMonth + '月)'"></h2>
-                        <button @click="nextMonth" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><i
-                                class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
-                    <h3 class="font-bold border-b pb-2 text-gray-700 text-lg"><i
-                            class="fa-solid fa-calendar-day mr-2"></i>開催情報</h3>
-
-                    <div class="flex flex-col space-y-1">
-                        <span class="text-sm text-gray-500">開催日時</span>
-                        <span class="text-xl font-bold text-gray-800"
-                            x-text="formatDate(currentRecord.datetime) || '未定'"></span>
-                    </div>
-
-                    <div class="flex flex-col space-y-1">
-                        <span class="text-sm text-gray-500">開催場所</span>
-                        <span class="text-xl font-bold text-gray-800" x-text="currentRecord.place || '未定'"></span>
-                    </div>
-
-                    <div class="flex flex-col space-y-1">
-                        <span class="text-sm text-gray-500">担当幹事</span>
-                        <span class="text-xl font-bold text-gray-800" x-text="getCurrentManagerName()"></span>
-                    </div>
-
-                    <div class="flex flex-col space-y-1">
-                        <span class="text-sm text-gray-500">参加人数</span>
-                        <span class="text-xl font-bold text-gray-800"><span x-text="totalAttendance"></span> 名</span>
-                    </div>
-
-                    <div class="flex flex-col space-y-2">
-                        <span class="text-sm text-gray-500">参加メンバー内訳</span>
-                        <div class="border rounded-lg p-3 bg-gray-50 space-y-1 max-h-48 overflow-y-auto">
-                            <template x-for="member in getAttendanceMembers()" :key="member.id">
-                                <div x-show="currentRecord.attendance[member.id]?.member || (currentRecord.attendance[member.id]?.family > 0)"
-                                    class="flex justify-between items-center text-sm">
-                                    <span class="font-medium text-gray-800" x-text="member.name"></span>
-                                    <div class="text-gray-600 text-xs">
-                                        <span x-show="currentRecord.attendance[member.id]?.member">本人</span>
-                                        <span
-                                            x-show="currentRecord.attendance[member.id]?.member && currentRecord.attendance[member.id]?.family > 0">
-                                            ＋ </span>
-                                        <span x-show="currentRecord.attendance[member.id]?.family > 0"
-                                            x-text="'家族' + currentRecord.attendance[member.id]?.family + '名'"></span>
-                                    </div>
-                                </div>
-                            </template>
-                            <div x-show="totalAttendance === 0" class="text-gray-400 text-sm italic text-center py-2">
-                                参加予定のメンバーはいません
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Members -->
-            <div x-show="currentTab === 'members'" x-cloak class="space-y-6">
-
-                <!-- 幹事一括指定パネル (管理者のみ表示) -->
-                <div class="bg-white rounded-xl shadow-sm border border-blue-100 p-5" x-show="canEditAdmin()">
-                    <div class="flex items-center border-b pb-2 mb-4">
-                        <i class="fa-solid fa-flag text-moai-500 mr-2"></i>
-                        <h2 class="text-lg font-bold text-gray-700">令和<span x-text="getReiwaYear()"></span>年度 幹事一括指定
-                        </h2>
-                        <span
-                            class="ml-3 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">管理者専用</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-4"><i
-                            class="fa-solid fa-circle-info mr-1"></i>各月の幹事を設定すると、そのメンバーは当月のみ「幹事権限（編集可）」でログインできるようになります。
-                    </p>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-sm">
-                            <thead>
-                                <tr class="bg-slate-50 text-gray-600">
-                                    <th class="p-2 text-center w-16">月</th>
-                                    <th class="p-2 text-left">幹事</th>
-                                    <th class="p-2 text-left">取得者</th>
-                                    <th class="p-2 text-center w-20">状態</th>
-                                    <th class="p-2 text-center w-16">保存</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template x-for="month in 12" :key="month">
-                                    <tr class="border-b hover:bg-slate-50"
-                                        :class="month === activeMonth ? 'bg-blue-50 border-blue-200' : ''">
-                                        <td class="p-2 text-center font-bold"
-                                            :class="month === activeMonth ? 'text-moai-600' : 'text-gray-600'">
-                                            <span x-text="month + '月'"></span>
-                                            <span x-show="month === activeMonth"
-                                                class="block text-xs text-moai-400">今月</span>
+                                        <td class="p-2.5 text-center">
+                                            <input type="number" min="0" x-model.number="currentRecord.attendance[member.id].family" :disabled="!canEdit()"
+                                                class="w-12 border rounded p-1 text-center font-bold bg-slate-50 focus:bg-white">
                                         </td>
-                                        <td class="p-2">
-                                            <select :id="'manager-select-' + month"
-                                                x-model="getOrInitRecord(month).managerId"
-                                                class="w-full border rounded p-1.5 text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-moai-500">
-                                                <option value="">-- 未定 --</option>
-                                                <template x-for="member in activeMembers" :key="member.id">
-                                                    <option :value="member.id" x-text="member.name"></option>
-                                                </template>
-                                            </select>
-                                        </td>
-                                        <td class="p-2">
-                                            <select :id="'receiver-select-' + month"
-                                                x-model="getOrInitRecord(month).receiverId"
-                                                class="w-full border rounded p-1.5 text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-yellow-400 border-yellow-300">
-                                                <option value="">-- 未定 --</option>
-                                                <template x-for="member in activeMembers" :key="member.id">
-                                                    <option :value="member.id" x-text="member.name"></option>
-                                                </template>
-                                            </select>
-                                        </td>
-                                        <td class="p-2 text-center">
-                                            <span x-show="records[month] && records[month].isCompleted"
-                                                class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">完了</span>
-                                            <span x-show="!records[month] || !records[month].isCompleted"
-                                                class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">予定</span>
-                                        </td>
-                                        <td class="p-2 text-center">
-                                            <button @click="saveMonthManager(month)"
-                                                class="bg-moai-500 hover:bg-moai-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow transition-colors">
-                                                <i class="fa-solid fa-save"></i>
+                                        <td class="p-2.5 text-center">
+                                            <!-- 集金トグルボタン -->
+                                            <button @click="togglePaid(member.id)" :disabled="!canEdit()"
+                                                class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
+                                                :class="currentRecord.attendance[member.id]?.isPaid
+                                                    ? 'bg-green-600 text-white shadow-sm'
+                                                    : 'bg-slate-200 text-slate-600 hover:bg-slate-300'">
+                                                <i class="fa-solid" :class="currentRecord.attendance[member.id]?.isPaid ? 'fa-check-circle' : 'fa-circle-xmark'"></i>
+                                                <span x-text="currentRecord.attendance[member.id]?.isPaid ? '集金済' : '未回収'"></span>
                                             </button>
                                         </td>
                                     </tr>
@@ -571,56 +661,357 @@
                     </div>
                 </div>
 
-                <!-- メンバー管理 -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                    <div class="flex justify-between items-center border-b pb-2 mb-4">
-                        <h2 class="text-lg font-bold text-gray-700">令和<span x-text="getReiwaYear()"></span>年度 メンバー管理
+                <!-- 幹事用 統合保存ボタン（2-③ 保存UXの改善） -->
+                <div x-show="canEdit()" class="sticky bottom-20 md:bottom-4 z-40 bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-slate-300 flex justify-end gap-3">
+                    <button @click="saveRecord()"
+                        class="w-full sm:w-auto bg-gradient-to-r from-dionysus-700 to-dionysus-600 hover:from-dionysus-800 hover:to-dionysus-700 text-white px-8 py-3 rounded-xl font-black shadow-md flex items-center justify-center gap-2 transition-transform active:scale-[0.98]">
+                        <i class="fa-solid fa-save"></i>
+                        <span>この月の内容を保存する</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- ==================================================== -->
+            <!-- Tab: Dashboard (星取表・年間履歴)                    -->
+            <!-- ==================================================== -->
+            <div x-show="currentTab === 'dashboard'" x-cloak class="space-y-5">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <div class="flex items-center justify-between border-b pb-3 mb-4">
+                        <h2 class="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2">
+                            <span>⚾</span>
+                            <span>令和<span x-text="getReiwaYear()"></span>年度 模合星取表（取得履歴）</span>
                         </h2>
-                        <span class="text-sm text-gray-500">計 <span x-text="activeMembers.length"></span> 名</span>
+                        <!-- 凡例 -->
+                        <div class="flex space-x-3 text-xs text-slate-600 font-bold">
+                            <div class="flex items-center"><span class="w-3.5 h-3.5 rounded-full bg-gold-400 mr-1 shadow-sm inline-block"></span> 取得者</div>
+                            <div class="flex items-center"><span class="w-3.5 h-3.5 rounded-full bg-dionysus-600 mr-1 shadow-sm inline-block"></span> 幹事</div>
+                        </div>
                     </div>
 
-                    <div class="mb-4 flex space-x-2" x-show="canEditAdmin()">
-                        <input type="text" x-model="newMemberName" placeholder="新しいメンバーの名前"
-                            class="flex-1 border rounded p-2" @keyup.enter="addMember">
+                    <!-- PC用テーブル表示 -->
+                    <div class="hidden sm:block overflow-x-auto">
+                        <table class="min-w-full text-xs text-center border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-700 font-bold">
+                                    <th class="border p-2 sticky left-0 bg-slate-50 z-10 w-28">選手名</th>
+                                    <template x-for="month in 12" :key="month">
+                                        <th class="border p-2 min-w-[50px]" x-text="month + '月'"></th>
+                                    </template>
+                                    <th class="border p-2 bg-dionysus-50 text-dionysus-900 w-20">受給状況</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="member in getDashboardMembers()" :key="member.id">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="border p-2 sticky left-0 bg-white z-10 font-bold text-slate-800" x-text="member.name"></td>
+                                        <template x-for="month in 12" :key="month">
+                                            <td class="border p-1">
+                                                <div class="flex flex-col items-center justify-center space-y-1">
+                                                    <span x-show="isReceiver(month, member.id)"
+                                                        class="w-5 h-5 rounded-full bg-gold-400 text-stadium-900 flex items-center justify-center text-[10px] font-black shadow-sm"
+                                                        title="取得者">金</span>
+                                                    <span x-show="isManager(month, member.id)"
+                                                        class="w-5 h-5 rounded-full bg-dionysus-600 text-white flex items-center justify-center text-[10px] font-black shadow-sm"
+                                                        title="幹事">幹</span>
+                                                </div>
+                                            </td>
+                                        </template>
+                                        <td class="border p-2 font-bold"
+                                            :class="hasReceived(member.id) ? 'text-green-600 font-black' : 'text-slate-400'">
+                                            <span x-text="hasReceived(member.id) ? '✓ 取得済' : '未取得'"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- スマホ用カード表示 -->
+                    <div class="sm:hidden space-y-3">
+                        <template x-for="member in getDashboardMembers()" :key="member.id">
+                            <div class="rounded-xl border p-3.5"
+                                :class="hasReceived(member.id) ? 'border-green-300 bg-green-50/50' : 'border-slate-200 bg-slate-50/70'">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-black text-slate-800 text-sm" x-text="member.name"></span>
+                                    <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full"
+                                        :class="hasReceived(member.id) ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-600'"
+                                        x-text="hasReceived(member.id) ? '✓ 取得済' : '未取得'"></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-bold block">取得月</span>
+                                        <div class="flex flex-wrap gap-1 mt-0.5">
+                                            <template x-for="detail in getMemberReceiverDetails(member.id)" :key="detail.month">
+                                                <span class="bg-gold-400 text-stadium-900 font-black px-2 py-0.5 rounded text-[11px]" x-text="detail.month + '月'"></span>
+                                            </template>
+                                            <span x-show="getMemberReceiverDetails(member.id).length === 0" class="text-slate-400 italic">未定</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-bold block">幹事月</span>
+                                        <div class="flex flex-wrap gap-1 mt-0.5">
+                                            <template x-for="month in getMemberManagerMonths(member.id)" :key="month">
+                                                <span class="bg-dionysus-600 text-white font-bold px-2 py-0.5 rounded text-[11px]" x-text="month + '月'"></span>
+                                            </template>
+                                            <span x-show="getMemberManagerMonths(member.id).length === 0" class="text-slate-400 italic">なし</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================================================== -->
+            <!-- Tab: Members (管理者専用 模合管理)                    -->
+            <!-- ==================================================== -->
+            <div x-show="currentTab === 'members'" x-cloak class="space-y-6">
+
+                <!-- 1. 年間開催消化率サマリーカード（3-③） -->
+                <div class="bg-gradient-to-r from-stadium-900 to-dionysus-900 text-white rounded-2xl p-5 shadow-lg border border-slate-700">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                        <div>
+                            <span class="text-xs font-bold text-gold-400 uppercase tracking-wider">Season Progress</span>
+                            <h2 class="text-xl font-black">令和<span x-text="getReiwaYear()"></span>年度 模合開催消化率</h2>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-3xl font-black text-gold-400" x-text="getCompletionRate() + '%'"></span>
+                            <span class="text-xs text-slate-300 block font-bold" x-text="'(' + getCompletedMeetingsCount() + ' / 12 回 完了)'"></span>
+                        </div>
+                    </div>
+                    <!-- プログレスバー -->
+                    <div class="w-full bg-black/40 rounded-full h-3.5 p-0.5 overflow-hidden border border-white/20">
+                        <div class="bg-gradient-to-r from-amber-400 to-gold-500 h-full rounded-full transition-all duration-500"
+                            :style="'width: ' + getCompletionRate() + '%'"></div>
+                    </div>
+                </div>
+
+                <!-- 2. 幹事・取得者一括指定パネル（3-① 未受給者サマリー & 一括保存） -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 gap-2">
+                        <div>
+                            <h3 class="font-black text-slate-800 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-flag text-dionysus-600"></i>
+                                年間幹事・取得者の一括割当
+                            </h3>
+                            <p class="text-xs text-slate-400">1年間の幹事と取得者のローテーションを一覧で設定できます</p>
+                        </div>
+                        <!-- 年間一括保存ボタン -->
+                        <button @click="saveAllAnnualRecords()"
+                            class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow transition-transform active:scale-95 flex items-center gap-1.5 w-fit">
+                            <i class="fa-solid fa-check-double"></i>
+                            <span>年間設定を一括保存</span>
+                        </button>
+                    </div>
+
+                    <!-- 未受給メンバー一覧バッジ（3-①） -->
+                    <div class="bg-amber-50/80 border border-amber-200 p-3 rounded-xl space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-exclamation text-amber-600"></i>
+                                まだ取得月が決まっていないメンバー（残り <span x-text="getRemainingUnreceivedMembers().length"></span> 名）
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            <template x-for="m in getRemainingUnreceivedMembers()" :key="m.id">
+                                <span class="bg-white border border-amber-300 text-amber-950 font-bold px-2.5 py-1 rounded-lg text-xs shadow-sm flex items-center gap-1">
+                                    <span x-text="m.name"></span>
+                                    <span x-show="m.preferredMonth" class="text-[10px] bg-amber-100 text-amber-800 px-1 rounded" x-text="m.preferredMonth + '月希'"></span>
+                                </span>
+                            </template>
+                            <span x-show="getRemainingUnreceivedMembers().length === 0" class="text-xs text-green-700 font-bold">
+                                🎉 全メンバーの受給月が決定しました！
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 12ヶ月テーブル -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-600 border-b">
+                                    <th class="p-2 text-center w-14 font-bold">月</th>
+                                    <th class="p-2 text-left font-bold">担当幹事</th>
+                                    <th class="p-2 text-left font-bold">取得者</th>
+                                    <th class="p-2 text-center w-20 font-bold">開催状態</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="month in 12" :key="month">
+                                    <tr class="border-b hover:bg-slate-50" :class="month === activeMonth ? 'bg-dionysus-50/50' : ''">
+                                        <td class="p-2 text-center font-black" :class="month === activeMonth ? 'text-dionysus-700' : 'text-slate-600'">
+                                            <span x-text="month + '月'"></span>
+                                        </td>
+                                        <td class="p-2">
+                                            <select x-model="getOrInitRecord(month).managerId"
+                                                class="w-full border rounded-lg p-1.5 text-xs bg-white font-medium">
+                                                <option value="">-- 未定 --</option>
+                                                <template x-for="member in activeMembers" :key="member.id">
+                                                    <option :value="member.id" x-text="member.name"></option>
+                                                </template>
+                                            </select>
+                                        </td>
+                                        <td class="p-2">
+                                            <select x-model="getOrInitRecord(month).receiverId"
+                                                class="w-full border-2 border-amber-300 rounded-lg p-1.5 text-xs bg-amber-50 font-bold text-amber-950">
+                                                <option value="">-- 未定 --</option>
+                                                <template x-for="member in activeMembers" :key="member.id">
+                                                    <option :value="member.id" x-text="member.name + (member.preferredMonth ? ' (' + member.preferredMonth + '月希望)' : '')"></option>
+                                                </template>
+                                            </select>
+                                        </td>
+                                        <td class="p-2 text-center">
+                                            <span x-show="records[month]?.isCompleted" class="text-[10px] bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-bold">完了</span>
+                                            <span x-show="!records[month]?.isCompleted" class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">予定</span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. メンバー登録・削除 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h3 class="font-black text-slate-800 text-base">メンバー名簿管理（計 <span x-text="activeMembers.length"></span> 名）</h3>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <input type="text" x-model="newMemberName" placeholder="新メンバーの名前（背番号など）"
+                            class="flex-1 border rounded-xl p-2.5 text-sm font-medium" @keyup.enter="addMember">
                         <button @click="addMember"
-                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold shadow transition-colors">追加</button>
+                            class="bg-dionysus-700 hover:bg-dionysus-800 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow transition-colors">
+                            追加
+                        </button>
                     </div>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
                         <template x-for="member in activeMembers" :key="member.id">
-                            <div
-                                class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                <span class="font-bold text-gray-800" x-text="member.name"></span>
-                                <button @click="removeMember(member.id)" x-show="canEditAdmin()"
-                                    class="text-red-400 hover:text-red-600" title="削除">
+                            <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                                <span class="font-bold text-slate-800" x-text="member.name"></span>
+                                <button @click="removeMember(member.id)" class="text-slate-400 hover:text-red-500 p-1" title="削除">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </template>
                     </div>
-                    <p x-show="!canEditAdmin()" class="text-sm text-gray-500 mt-4"><i
-                            class="fa-solid fa-circle-info mr-1"></i> メンバーの追加・削除は管理者権限でのみ可能です。</p>
                 </div>
 
-                <div class="bg-red-50 text-red-800 p-4 rounded-xl border border-red-200">
-                    <h3 class="font-bold mb-2">危険な操作</h3>
-                    <button @click="resetData()"
-                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm shadow transition-colors">全てのデータをリセット</button>
+                <!-- 4. Supabase（無料枠）クラウド連携準備パネル（3-②） -->
+                <div class="bg-gradient-to-br from-slate-900 to-stadium-900 text-white rounded-2xl p-5 shadow-sm border border-slate-700 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-green-400 font-black text-lg">⚡</span>
+                            <h3 class="font-bold text-sm">クラウド同期（Supabase連携設定）</h3>
+                        </div>
+                        <span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-0.5 rounded border border-green-500/30">無料枠対応設計</span>
+                    </div>
+                    <p class="text-xs text-slate-300">
+                        SupabaseのプロジェクトURLとAnon Keyを設定することで、メンバー全員のスマホとリアルタイムにデータを同期可能になります。
+                    </p>
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Supabase Project URL</label>
+                            <input type="text" x-model="supabaseConfig.url" placeholder="https://your-project.supabase.co"
+                                class="w-full bg-black/40 border border-slate-700 rounded-lg p-2 text-white font-mono text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Supabase Anon Key</label>
+                            <input type="password" x-model="supabaseConfig.anonKey" placeholder="eyJhbGciOi..."
+                                class="w-full bg-black/40 border border-slate-700 rounded-lg p-2 text-white font-mono text-xs">
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button @click="saveSupabaseConfig()"
+                                class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-1.5 rounded-lg transition-colors">
+                                接続設定を保存
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. 危険な操作 -->
+                <div class="bg-red-50 text-red-900 p-4 rounded-2xl border border-red-200 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-xs">データリセット</h4>
+                        <p class="text-[11px] text-red-700">今年度の登録データを初期化します</p>
+                    </div>
+                    <button @click="resetData()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow">
+                        リセット
+                    </button>
                 </div>
             </div>
 
         </main>
+
+        <!-- ==================================================== -->
+        <!-- スマホ用 固定下部ボトムナビゲーション (4. 全体共通)   -->
+        <!-- ==================================================== -->
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-2xl flex justify-around items-center py-2 px-1">
+            <!-- ホーム -->
+            <button @click="currentTab = 'menu'"
+                :class="currentTab === 'menu' ? 'text-dionysus-700 font-bold' : 'text-slate-500'"
+                class="flex flex-col items-center flex-1 py-1 transition-colors">
+                <i class="fa-solid fa-home text-lg"></i>
+                <span class="text-[10px] mt-0.5">ホーム</span>
+            </button>
+
+            <!-- 開催案内 -->
+            <button @click="currentTab = 'user_view'"
+                :class="currentTab === 'user_view' ? 'text-dionysus-700 font-bold' : 'text-slate-500'"
+                class="flex flex-col items-center flex-1 py-1 transition-colors">
+                <i class="fa-solid fa-calendar-day text-lg"></i>
+                <span class="text-[10px] mt-0.5">開催案内</span>
+            </button>
+
+            <!-- 履歴 -->
+            <button @click="currentTab = 'dashboard'"
+                :class="currentTab === 'dashboard' ? 'text-dionysus-700 font-bold' : 'text-slate-500'"
+                class="flex flex-col items-center flex-1 py-1 transition-colors">
+                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                <span class="text-[10px] mt-0.5">取得履歴</span>
+            </button>
+
+            <!-- 幹事用（該当者または管理者のみ） -->
+            <button @click="currentTab = 'meeting'" x-show="currentRole === 'admin' || currentRole === 'manager'"
+                :class="currentTab === 'meeting' ? 'text-gold-600 font-black' : 'text-slate-500'"
+                class="flex flex-col items-center flex-1 py-1 transition-colors relative">
+                <i class="fa-solid fa-clipboard-check text-lg"></i>
+                <span class="text-[10px] mt-0.5">開催管理</span>
+                <span x-show="currentRole === 'manager'" class="w-2 h-2 rounded-full bg-gold-500 absolute top-1 right-3 animate-ping"></span>
+            </button>
+
+            <!-- 管理者用 -->
+            <button @click="currentTab = 'members'" x-show="currentRole === 'admin'"
+                :class="currentTab === 'members' ? 'text-stadium-900 font-bold' : 'text-slate-500'"
+                class="flex flex-col items-center flex-1 py-1 transition-colors">
+                <i class="fa-solid fa-baseball-bat-ball text-lg"></i>
+                <span class="text-[10px] mt-0.5">管理</span>
+            </button>
+        </nav>
+
     </div>
 
+    <!-- ==================================================== -->
+    <!-- Alpine.js アプリケーションロジック                   -->
+    <!-- ==================================================== -->
     <script>
-        // 初期メンバー (沖縄に多い名字をサンプルとして12名)
+        // サンプルメンバー（ディオニソス草野球メンバーのイメージ）
         const DEFAULT_MEMBERS = [
-            { id: 'm1', name: '比嘉' }, { id: 'm2', name: '金城' },
-            { id: 'm3', name: '大城' }, { id: 'm4', name: '宮城' },
-            { id: 'm5', name: '新垣' }, { id: 'm6', name: '玉城' },
-            { id: 'm7', name: '上原' }, { id: 'm8', name: '島袋' },
-            { id: 'm9', name: '平良' }, { id: 'm10', name: '山城' },
-            { id: 'm11', name: '知念' }, { id: 'm12', name: '宮里' }
+            { id: 'm1', name: '比嘉 (主将)', preferredMonth: '' },
+            { id: 'm2', name: '金城 (エース)', preferredMonth: '' },
+            { id: 'm3', name: '大城 (捕手)', preferredMonth: '' },
+            { id: 'm4', name: '宮城 (4番)', preferredMonth: '' },
+            { id: 'm5', name: '新垣', preferredMonth: '' },
+            { id: 'm6', name: '玉城', preferredMonth: '' },
+            { id: 'm7', name: '上原', preferredMonth: '' },
+            { id: 'm8', name: '島袋', preferredMonth: '' },
+            { id: 'm9', name: '平良', preferredMonth: '' },
+            { id: 'm10', name: '山城', preferredMonth: '' },
+            { id: 'm11', name: '知念', preferredMonth: '' },
+            { id: 'm12', name: '宮里', preferredMonth: '' }
         ];
 
         document.addEventListener('alpine:init', () => {
@@ -633,16 +1024,25 @@
                 isAdminLoggedIn: false,
                 currentTab: 'menu',
                 activeYear: new Date().getFullYear(),
-                activeMonth: new Date().getMonth() + 1, // 1〜12
+                activeMonth: new Date().getMonth() + 1, // 1〜12月
                 members: [],
                 records: {},
                 newMemberName: '',
-                toastMessage: '', // トースト通知メッセージ,
+                toastMessage: '',
+                _toastTimer: null,
 
+                // Supabase（無料枠）接続用設定
+                supabaseConfig: {
+                    url: '',
+                    anonKey: ''
+                },
+
+                // 権限判定
                 get currentRole() {
                     if (this.isAdminLoggedIn) return 'admin';
                     if (!this.isLoggedIn) return 'member';
 
+                    // 当月の幹事かどうか判定
                     const currentManagerId = this.records[this.activeMonth]?.managerId;
                     if (currentManagerId && currentManagerId === this.loggedInMemberId) {
                         return 'manager';
@@ -650,6 +1050,11 @@
                     return 'member';
                 },
 
+                isCurrentMonthManager() {
+                    return this.currentRole === 'manager';
+                },
+
+                // ログイン
                 login() {
                     if (this.passwordInput === '8888') {
                         // 管理者ログイン
@@ -658,6 +1063,7 @@
                         this.loggedInMemberId = this.loginMemberInput;
                         this.loginError = false;
                         this.currentTab = 'menu';
+                        this.showToast('管理者としてログインしました');
                     } else if (this.passwordInput === '0000') {
                         // 一般ログイン
                         if (!this.loginMemberInput) {
@@ -669,11 +1075,13 @@
                         this.loggedInMemberId = this.loginMemberInput;
                         this.loginError = false;
 
-                        // 幹事なら開催管理、その他ならユーザー閲覧タブへ
+                        // 当月幹事なら開催管理、その他はホームへ
                         if (this.currentRole === 'manager') {
                             this.currentTab = 'meeting';
+                            this.showToast('今月は幹事担当です！開催内容をご確認ください');
                         } else {
-                            this.currentTab = 'user_view';
+                            this.currentTab = 'menu';
+                            this.showToast('ログインしました');
                         }
                     } else {
                         this.loginError = true;
@@ -699,53 +1107,94 @@
                     }
                     if (this.loggedInMemberId) {
                         const m = this.members.find(member => member.id === this.loggedInMemberId);
-                        return m ? m.name : '不明';
+                        return m ? m.name : 'メンバー';
                     }
                     return 'ゲスト';
                 },
 
                 getReiwaYear() {
-                    // activeYear に基づいて計算
                     return this.activeYear - 2018;
                 },
+
                 formatDate(dateString) {
                     if (!dateString) return '';
                     const d = new Date(dateString);
                     if (isNaN(d.getTime())) return '';
-                    return d.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+                    const datePart = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日(${weekdays[d.getDay()]})`;
+                    const timePart = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                    return `${datePart} ${timePart}〜`;
+                },
+
+                formatDateShort(dateString) {
+                    if (!dateString) return '';
+                    const d = new Date(dateString);
+                    if (isNaN(d.getTime())) return '';
+                    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+                    return `${d.getMonth() + 1}/${d.getDate()}(${weekdays[d.getDay()]})`;
+                },
+
+                // GoogleマップURL（完全無料・標準検索クエリ）
+                getGoogleMapUrl(place) {
+                    if (!place) return '#';
+                    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
+                },
+
+                // Googleカレンダー登録URL（完全無料・標準Webインテント）
+                getGoogleCalendarUrl() {
+                    const rec = this.currentRecord;
+                    if (!rec || !rec.datetime) return '#';
+                    const startDate = new Date(rec.datetime);
+                    if (isNaN(startDate.getTime())) return '#';
+
+                    // 終了時刻は開始から2時間後を初期値とする
+                    const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
+
+                    const formatForGCal = (d) => {
+                        return d.toISOString().replace(/-|:|\.\d+/g, '');
+                    };
+
+                    const title = `ディオニソス模合 第${this.activeMonth}回`;
+                    const dates = `${formatForGCal(startDate)}/${formatForGCal(endDate)}`;
+                    const location = rec.place || '';
+                    const details = `ディオニソス模合 第${this.activeMonth}回\n幹事: ${this.getCurrentManagerName()}\n場所: ${location}`;
+
+                    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dates}&location=${encodeURIComponent(location)}&details=${encodeURIComponent(details)}`;
                 },
 
                 getCurrentManagerName() {
                     const managerId = this.records[this.activeMonth]?.managerId;
                     if (managerId) {
                         const m = this.members.find(member => member.id === managerId);
-                        return m ? m.name : '未設定 (管理者が設定)';
+                        return m ? m.name : '未設定';
                     }
                     return '未設定 (管理者が設定)';
                 },
 
+                getCurrentReceiverName() {
+                    const receiverId = this.records[this.activeMonth]?.receiverId;
+                    if (receiverId) {
+                        const m = this.members.find(member => member.id === receiverId);
+                        return m ? m.name : '未定';
+                    }
+                    return '未定';
+                },
+
                 init() {
                     this.loadData();
-                    // 現在の月のレコードがなければ初期化
                     this.initRecordForMonth(this.activeMonth);
                 },
 
                 loadData() {
                     const membersKey = `moai_members_${this.activeYear}`;
                     const recordsKey = `moai_records_${this.activeYear}`;
+                    const supabaseKey = `moai_supabase_config`;
 
                     const savedMembers = localStorage.getItem(membersKey);
                     if (savedMembers) {
-                        this.members = JSON.parse(savedMembers).map(m => ({ isDeleted: false, ...m }));
+                        this.members = JSON.parse(savedMembers).map(m => ({ isDeleted: false, preferredMonth: '', ...m }));
                     } else {
-                        // 前年のメンバーデータを探す
-                        const prevYearKey = `moai_members_${this.activeYear - 1}`;
-                        const prevMembers = localStorage.getItem(prevYearKey);
-                        if (prevMembers) {
-                            this.members = JSON.parse(prevMembers);
-                        } else {
-                            this.members = DEFAULT_MEMBERS.map(m => ({ ...m, isDeleted: false }));
-                        }
+                        this.members = DEFAULT_MEMBERS.map(m => ({ ...m, isDeleted: false }));
                         this.saveMembers();
                     }
 
@@ -755,6 +1204,11 @@
                     } else {
                         this.records = {};
                     }
+
+                    const savedSupabase = localStorage.getItem(supabaseKey);
+                    if (savedSupabase) {
+                        this.supabaseConfig = JSON.parse(savedSupabase);
+                    }
                 },
 
                 saveMembers() {
@@ -763,63 +1217,54 @@
 
                 saveRecords() {
                     localStorage.setItem(`moai_records_${this.activeYear}`, JSON.stringify(this.records));
-                    // トースト通知を表示
-                    this.toastMessage = '保存しました。';
+                    this.showToast('保存しました');
+                },
+
+                showToast(msg) {
+                    this.toastMessage = msg;
                     clearTimeout(this._toastTimer);
-                    this._toastTimer = setTimeout(() => { this.toastMessage = ''; }, 2500);
+                    this._toastTimer = setTimeout(() => { this.toastMessage = ''; }, 2800);
                 },
 
                 changeYear(year) {
                     this.activeYear = Number(year);
                     this.loadData();
-                    // 現在の月のレコードがなければ初期化
                     this.initRecordForMonth(this.activeMonth);
                 },
 
                 initRecordForMonth(month) {
                     if (!this.records[month]) {
-                        // 出席データのひな形作成
                         const att = {};
                         this.members.forEach(m => {
-                            att[m.id] = { member: false, family: 0 };
+                            att[m.id] = { member: false, family: 0, isPaid: false };
                         });
-
-                        // 前月の受給者を自動的に今月の幹事にするロジック
-                        let prevManager = '';
-                        let prevMonth = month - 1;
-                        if (prevMonth < 1) prevMonth = 12; // 簡易的に年またぎを考慮
-                        if (this.records[prevMonth] && this.records[prevMonth].receiverId) {
-                            prevManager = this.records[prevMonth].receiverId;
-                        }
 
                         this.records[month] = {
                             month: month,
                             datetime: '',
                             place: '',
                             amount: 10000,
-                            managerId: prevManager,
+                            managerId: '',
                             receiverId: '',
-                            flow: 'hope_1',
-                            notes: '',
                             isCompleted: false,
                             attendance: att
                         };
                     } else {
-                        // メンバー追加等でattendanceにキーがない場合の補完
+                        // メンバー追加等のキー補完
                         this.members.forEach(m => {
                             if (!this.records[month].attendance[m.id]) {
-                                this.records[month].attendance[m.id] = { member: false, family: 0 };
+                                this.records[month].attendance[m.id] = { member: false, family: 0, isPaid: false };
                             }
                         });
                     }
                 },
 
                 get currentRecord() {
-                    return this.records[this.activeMonth];
+                    return this.records[this.activeMonth] || {};
                 },
 
                 get totalAttendance() {
-                    if (!this.currentRecord) return 0;
+                    if (!this.currentRecord || !this.currentRecord.attendance) return 0;
                     let total = 0;
                     for (const id in this.currentRecord.attendance) {
                         const att = this.currentRecord.attendance[id];
@@ -843,17 +1288,23 @@
                     }
                 },
 
+                goToCurrentMonth() {
+                    this.activeMonth = new Date().getMonth() + 1;
+                    this.initRecordForMonth(this.activeMonth);
+                    this.showToast(`${this.activeMonth}月を表示しました`);
+                },
+
+                // 幹事用：保存
                 saveRecord() {
                     // 取得者の重複チェック
                     const duplicatedMonth = this.checkReceiverDuplication(this.activeMonth, this.currentRecord.receiverId);
                     if (duplicatedMonth !== null) {
                         const member = this.members.find(m => m.id === this.currentRecord.receiverId);
                         const memberName = member ? member.name : '選択されたメンバー';
-                        alert(`${memberName} さんは既に ${duplicatedMonth} 月の取得者として設定されています。重複して設定することはできません。`);
+                        alert(`${memberName} さんは既に ${duplicatedMonth} 月の取得者として設定されています。`);
                         return;
                     }
 
-                    // 開催日時と場所が入力されていれば完了とする
                     if (this.currentRecord.datetime && this.currentRecord.place) {
                         this.currentRecord.isCompleted = true;
                     } else {
@@ -862,118 +1313,227 @@
                     this.saveRecords();
                 },
 
-                // 権限判定
+                // 2-② 幹事用：集金トグル
+                togglePaid(memberId) {
+                    if (!this.canEdit()) return;
+                    if (!this.currentRecord.attendance[memberId]) return;
+                    this.currentRecord.attendance[memberId].isPaid = !this.currentRecord.attendance[memberId].isPaid;
+                    this.saveRecords();
+                },
+
+                getPaidCount() {
+                    if (!this.currentRecord?.attendance) return 0;
+                    let count = 0;
+                    for (const id in this.currentRecord.attendance) {
+                        if (this.currentRecord.attendance[id]?.isPaid) count++;
+                    }
+                    return count;
+                },
+
+                getAttendingMemberCount() {
+                    if (!this.currentRecord?.attendance) return 0;
+                    let count = 0;
+                    for (const id in this.currentRecord.attendance) {
+                        if (this.currentRecord.attendance[id]?.member) count++;
+                    }
+                    return count;
+                },
+
+                // 1-① ユーザー用：マイステータス操作
+                getMyReceiverMonthText() {
+                    if (!this.loggedInMemberId) return '-';
+                    const months = [];
+                    for (let m = 1; m <= 12; m++) {
+                        if (this.records[m]?.receiverId === this.loggedInMemberId) {
+                            months.push(`${m}月`);
+                        }
+                    }
+                    return months.length > 0 ? months.join(', ') + '（決定）' : '未定';
+                },
+
+                getMyManagerMonthText() {
+                    if (!this.loggedInMemberId) return '-';
+                    const months = [];
+                    for (let m = 1; m <= 12; m++) {
+                        if (this.records[m]?.managerId === this.loggedInMemberId) {
+                            months.push(`${m}月`);
+                        }
+                    }
+                    return months.length > 0 ? months.join(', ') : '未定';
+                },
+
+                getMyPreferredMonth() {
+                    const member = this.members.find(m => m.id === this.loggedInMemberId);
+                    return member?.preferredMonth || '';
+                },
+
+                setMyPreferredMonth(month) {
+                    const member = this.members.find(m => m.id === this.loggedInMemberId);
+                    if (member) {
+                        member.preferredMonth = month;
+                        this.saveMembers();
+                        this.showToast(`取得希望月を ${month ? month + '月' : '未指定'} に更新しました`);
+                    }
+                },
+
+                getMyAttendance() {
+                    if (!this.loggedInMemberId || !this.currentRecord?.attendance) {
+                        return { member: false, family: 0 };
+                    }
+                    return this.currentRecord.attendance[this.loggedInMemberId] || { member: false, family: 0 };
+                },
+
+                setMyAttendance(isAttending) {
+                    if (!this.loggedInMemberId || !this.currentRecord) return;
+                    if (!this.currentRecord.attendance[this.loggedInMemberId]) {
+                        this.currentRecord.attendance[this.loggedInMemberId] = { member: false, family: 0, isPaid: false };
+                    }
+                    this.currentRecord.attendance[this.loggedInMemberId].member = isAttending;
+                    this.saveRecords();
+                    this.showToast(isAttending ? '参加で回答しました' : '不参加で回答しました');
+                },
+
+                setMyFamilyCount(count) {
+                    if (!this.loggedInMemberId || !this.currentRecord) return;
+                    if (!this.currentRecord.attendance[this.loggedInMemberId]) {
+                        this.currentRecord.attendance[this.loggedInMemberId] = { member: false, family: 0, isPaid: false };
+                    }
+                    this.currentRecord.attendance[this.loggedInMemberId].family = Number(count) || 0;
+                    this.saveRecords();
+                    this.showToast(`家族人数を ${count}名 に更新しました`);
+                },
+
+                // 3-① 管理者用：年間一括保存
+                saveAllAnnualRecords() {
+                    // 重複チェック
+                    const receiverMap = {};
+                    for (let m = 1; m <= 12; m++) {
+                        const rec = this.records[m];
+                        if (rec && rec.receiverId) {
+                            if (receiverMap[rec.receiverId]) {
+                                const member = this.members.find(mem => mem.id === rec.receiverId);
+                                alert(`${member?.name || 'メンバー'} さんが ${receiverMap[rec.receiverId]}月 と ${m}月 に重複して受給者に設定されています。`);
+                                return;
+                            }
+                            receiverMap[rec.receiverId] = m;
+                        }
+                    }
+
+                    this.saveRecords();
+                    this.showToast('年間幹事・取得者設定を一括保存しました！');
+                },
+
+                // 3-① 管理者用：未受給メンバー一覧
+                getRemainingUnreceivedMembers() {
+                    return this.activeMembers.filter(m => !this.hasReceived(m.id));
+                },
+
+                // 3-③ 管理者用：開催消化率
+                getCompletedMeetingsCount() {
+                    let count = 0;
+                    for (let m = 1; m <= 12; m++) {
+                        if (this.records[m]?.isCompleted) count++;
+                    }
+                    return count;
+                },
+
+                getCompletionRate() {
+                    const completed = this.getCompletedMeetingsCount();
+                    return Math.round((completed / 12) * 100);
+                },
+
+                // 3-② Supabase設定保存
+                saveSupabaseConfig() {
+                    localStorage.setItem('moai_supabase_config', JSON.stringify(this.supabaseConfig));
+                    this.showToast('Supabase連携設定を保存しました');
+                },
+
+                // 権限
                 canEdit() {
                     return this.currentRole === 'admin' || this.currentRole === 'manager';
                 },
+
                 canEditAdmin() {
                     return this.currentRole === 'admin';
                 },
 
-                // 論理削除用ゲッター
+                // メンバーリスト
                 get activeMembers() {
                     return this.members.filter(m => !m.isDeleted);
                 },
+
                 getDashboardMembers() {
-                    const active = this.activeMembers;
-                    const historical = this.members.filter(m => {
-                        if (!m.isDeleted) return false;
-                        for (let month = 1; month <= 12; month++) {
-                            if (this.isReceiver(month, m.id) || this.isManager(month, m.id)) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    });
-                    return [...active, ...historical];
-                },
-                getAttendanceMembers() {
-                    const active = this.activeMembers;
-                    const attended = this.members.filter(m => {
-                        if (!m.isDeleted) return false;
-                        const att = this.currentRecord?.attendance?.[m.id];
-                        return att && (att.member || (Number(att.family) > 0));
-                    });
-                    return [...active, ...attended];
+                    return this.activeMembers;
                 },
 
-                // メンバー管理用
+                getAttendanceMembers() {
+                    return this.activeMembers;
+                },
+
+                // メンバー追加・削除
                 addMember() {
                     if (this.newMemberName.trim() === '') return;
                     const id = 'm' + Date.now();
-                    this.members.push({ id: id, name: this.newMemberName.trim(), isDeleted: false });
+                    this.members.push({ id: id, name: this.newMemberName.trim(), isDeleted: false, preferredMonth: '' });
                     this.newMemberName = '';
                     this.saveMembers();
-                    // レコードの補完
-                    for (let m in this.records) {
-                        this.records[m].attendance[id] = { member: false, family: 0 };
+
+                    for (let m = 1; m <= 12; m++) {
+                        this.initRecordForMonth(m);
+                        this.records[m].attendance[id] = { member: false, family: 0, isPaid: false };
                     }
-                    this.saveRecords(); // 同期
+                    this.saveRecords();
+                    this.showToast('メンバーを追加しました');
                 },
 
                 removeMember(id) {
-                    if (confirm('本当に削除しますか？\n過去の記録には名前が残ります。')) {
+                    if (confirm('このメンバーを削除しますか？\n過去の記録には名前が残ります。')) {
                         const member = this.members.find(m => m.id === id);
                         if (member) {
                             member.isDeleted = true;
                             this.saveMembers();
+                            this.showToast('メンバーを削除しました');
                         }
                     }
                 },
 
-                // ダッシュボード・受給判定用
+                // 取得判定
                 isReceiver(month, memberId) {
                     return this.records[month] && this.records[month].receiverId === memberId;
                 },
+
                 isManager(month, memberId) {
                     return this.records[month] && this.records[month].managerId === memberId;
                 },
+
                 hasReceived(memberId) {
                     for (let m = 1; m <= 12; m++) {
                         if (this.isReceiver(m, memberId)) return true;
                     }
                     return false;
                 },
-                // 指定した月以外で、同じメンバーが既に取得者になっているかチェック
+
                 checkReceiverDuplication(targetMonth, receiverId) {
                     if (!receiverId) return null;
                     for (let m = 1; m <= 12; m++) {
                         if (m === Number(targetMonth)) continue;
                         if (this.isReceiver(m, receiverId)) {
-                            return m; // 重複している月を返す
+                            return m;
                         }
                     }
                     return null;
                 },
-                // スマホカード表示用: そのメンバーが取得者だった月の一覧を返す
-                getMemberReceiverMonths(memberId) {
-                    const months = [];
-                    for (let m = 1; m <= 12; m++) {
-                        if (this.isReceiver(m, memberId)) months.push(m);
-                    }
-                    return months;
-                },
-                // スマホカード表示用: 取得月 + 開催日付のオブジェクト配列を返す
+
                 getMemberReceiverDetails(memberId) {
                     const details = [];
                     for (let m = 1; m <= 12; m++) {
                         if (this.isReceiver(m, memberId)) {
-                            const rec = this.records[m];
-                            // 日付が設定されていれば "MM/DD(曜日)" 形式で表示
-                            let dateStr = '';
-                            if (rec && rec.datetime) {
-                                const d = new Date(rec.datetime);
-                                if (!isNaN(d.getTime())) {
-                                    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-                                    dateStr = `${d.getMonth() + 1}/${d.getDate()}（${weekdays[d.getDay()]}）`;
-                                }
-                            }
-                            details.push({ month: m, date: dateStr });
+                            details.push({ month: m });
                         }
                     }
                     return details;
                 },
-                // スマホカード表示用: そのメンバーが幹事だった月の一覧を返す
+
                 getMemberManagerMonths(memberId) {
                     const months = [];
                     for (let m = 1; m <= 12; m++) {
@@ -981,41 +1541,18 @@
                     }
                     return months;
                 },
+
                 getUnreceivedMembers() {
                     return this.activeMembers.filter(m => !this.hasReceived(m.id) || (this.currentRecord && this.currentRecord.receiverId === m.id));
                 },
 
-                // 幹事一括指定パネル用: 指定月のレコードを取得し、なければ初期化して返す
                 getOrInitRecord(month) {
                     this.initRecordForMonth(month);
                     return this.records[month];
                 },
 
-                // 幹事一括指定パネル用: 指定月の幹事・取得者のみ保存する
-                saveMonthManager(month) {
-                    this.initRecordForMonth(month);
-
-                    // 取得者の重複チェック
-                    const record = this.records[month];
-                    const duplicatedMonth = this.checkReceiverDuplication(month, record.receiverId);
-                    if (duplicatedMonth !== null) {
-                        const member = this.members.find(m => m.id === record.receiverId);
-                        const memberName = member ? member.name : '選択されたメンバー';
-                        alert(`${memberName} さんは既に ${duplicatedMonth} 月の取得者として設定されています。重複して設定することはできません。`);
-                        return;
-                    }
-
-                    localStorage.setItem(`moai_records_${this.activeYear}`, JSON.stringify(this.records));
-                    // 完了判定は開催日時・場所の有無で決まるため、ここでは更新しない
-                    const msg = `${month}月の設定を保存しました。`;
-                    // 簡易トースト通知
-                    this.toastMessage = msg;
-                    clearTimeout(this._toastTimer);
-                    this._toastTimer = setTimeout(() => { this.toastMessage = ''; }, 2500);
-                },
-
                 resetData() {
-                    if (confirm('現在の年度の全てのデータが消去されます。よろしいですか？')) {
+                    if (confirm('今年度の全データ（名簿・開催記録）を初期化します。よろしいですか？')) {
                         localStorage.removeItem(`moai_members_${this.activeYear}`);
                         localStorage.removeItem(`moai_records_${this.activeYear}`);
                         location.reload();
