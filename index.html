@@ -134,6 +134,117 @@
             <span x-text="toastMessage"></span>
         </div>
 
+        <!-- 野球スコアボード風演出モーダル -->
+        <div x-show="showScoreboardModal" x-cloak
+            class="fixed inset-0 z-[300] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95">
+
+            <div class="bg-slate-950 border-4 border-gold-500/80 rounded-3xl p-5 sm:p-6 w-full max-w-xl shadow-[0_0_50px_rgba(245,158,11,0.3)] text-white relative overflow-hidden">
+                <!-- スコアボード背景LEDグロー演出 -->
+                <div class="absolute -top-24 -left-24 w-48 h-48 bg-gold-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-dionysus-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <!-- ヘッダー -->
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl animate-pulse">⚾</span>
+                        <div>
+                            <div class="text-[10px] text-gold-400 font-mono font-black tracking-widest uppercase">DIONYSUS STADIUM</div>
+                            <h3 class="text-lg font-black tracking-wider text-amber-400 font-mono">OFFICIAL SCOREBOARD</h3>
+                        </div>
+                    </div>
+                    <button @click="showScoreboardModal = false" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm font-bold transition-colors">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- スコアボード表示部 (レトロ電光掲示板風) -->
+                <div class="bg-black/90 rounded-2xl p-3 sm:p-4 border border-gold-500/30 font-mono space-y-4">
+                    <!-- チーム＆イニングテーブル -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-center text-xs border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-800 text-[10px]">
+                                    <th class="p-1 text-left w-20">TEAM</th>
+                                    <template x-for="m in 12" :key="m">
+                                        <th class="p-1 min-w-[20px]"
+                                            :class="activeMonth === m ? 'text-gold-400 font-black bg-gold-500/20 rounded' : ''"
+                                            x-text="m"></th>
+                                    </template>
+                                    <th class="p-1 text-amber-400 border-l border-slate-800">R</th>
+                                    <th class="p-1 text-emerald-400">H</th>
+                                    <th class="p-1 text-rose-400">E</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="font-bold text-sm">
+                                    <td class="p-1 text-left text-dionysus-400 text-xs font-black truncate">DIONYSUS</td>
+                                    <template x-for="m in 12" :key="m">
+                                        <td class="p-1 text-xs"
+                                            :class="{
+                                                'text-gold-400 font-black bg-gold-500/30 rounded ring-1 ring-gold-400': activeMonth === m,
+                                                'text-slate-600': activeMonth !== m
+                                            }">
+                                            <span x-text="records[m]?.isCompleted ? '✓' : (activeMonth === m ? '●' : '-')"></span>
+                                        </td>
+                                    </template>
+                                    <!-- R(Run/集金済), H(Hit/出席者数), E(Error/未集金) -->
+                                    <td class="p-1 text-amber-400 font-black border-l border-slate-800 text-base" x-text="getPaidCount()"></td>
+                                    <td class="p-1 text-emerald-400 font-black text-base" x-text="getAttendingMemberCount()"></td>
+                                    <td class="p-1 text-rose-400 font-black text-base" x-text="Math.max(0, getAttendingMemberCount() - getPaidCount())"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- メインメッセージ・演出エリア -->
+                    <div class="text-center py-4 px-2 bg-gradient-to-b from-slate-900 to-black rounded-xl border border-slate-800">
+                        <template x-if="getAttendingMemberCount() > 0 && getPaidCount() === getAttendingMemberCount()">
+                            <div class="space-y-2">
+                                <div class="inline-block bg-gradient-to-r from-gold-500 via-amber-300 to-gold-500 text-stadium-900 px-4 py-1 rounded-full text-xs font-black tracking-widest shadow-lg animate-bounce">
+                                    🏆 GRAND SLAM!! (満塁ホームラン)
+                                </div>
+                                <h4 class="text-xl sm:text-2xl font-black text-gold-400 tracking-wide">
+                                    全員の集金が完了しました！
+                                </h4>
+                                <p class="text-xs text-slate-300">
+                                    第<span x-text="activeMonth"></span>回 模合代コレクション 100% 達成！今夜もナイスゲーム！🍷⚾
+                                </p>
+                            </div>
+                        </template>
+
+                        <template x-if="getAttendingMemberCount() === 0 || getPaidCount() < getAttendingMemberCount()">
+                            <div class="space-y-1.5">
+                                <div class="inline-block bg-slate-800 text-amber-400 px-3 py-0.5 rounded-full text-[11px] font-bold tracking-wider">
+                                    ⚾ GAME IN PROGRESS (試合進行中)
+                                </div>
+                                <div class="text-base font-bold text-slate-200">
+                                    現在 集金中: <span class="text-gold-400 font-black text-xl" x-text="getPaidCount()"></span> / <span x-text="getAttendingMemberCount()"></span> 名
+                                </div>
+                                <p class="text-[11px] text-slate-400">
+                                    残りの未回収: あと <span class="text-rose-400 font-bold" x-text="getAttendingMemberCount() - getPaidCount()"></span> 名です
+                                </p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 閉じるボタン -->
+                <div class="mt-4 flex justify-center">
+                    <button @click="showScoreboardModal = false"
+                        class="bg-gradient-to-r from-dionysus-600 to-dionysus-700 hover:from-dionysus-700 hover:to-dionysus-800 text-white font-bold py-2.5 px-8 rounded-xl shadow-lg transition-transform active:scale-95 text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-baseball"></i>
+                        <span>ゲーム続行（閉じる）</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- ヘッダー -->
         <header class="bg-gradient-to-r from-stadium-900 via-dionysus-900 to-stadium-900 text-white shadow-lg sticky top-0 z-50 border-b border-dionysus-800">
             <div class="max-w-5xl mx-auto px-4 py-2.5 flex justify-between items-center">
@@ -387,7 +498,7 @@
             <!-- ==================================================== -->
             <!-- Tab: User View (一般メンバー用 開催情報)             -->
             <!-- ==================================================== -->
-            <div x-show="currentTab === 'user_view'" x-cloak class="space-y-5 max-w-2xl mx-auto">
+            <div x-show="currentTab === 'user_view'" x-cloak @touchstart="handleTouchStart($event)" @touchend="handleTouchEnd($event)" class="space-y-5 max-w-2xl mx-auto">
 
                 <!-- 月セレクター & 「今月」ジャンプボタン -->
                 <div class="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-200 p-3">
@@ -521,7 +632,7 @@
             <!-- ==================================================== -->
             <!-- Tab: Meeting Management (幹事・管理者用 開催管理)     -->
             <!-- ==================================================== -->
-            <div x-show="currentTab === 'meeting'" x-cloak class="space-y-5 max-w-2xl mx-auto">
+            <div x-show="currentTab === 'meeting'" x-cloak @touchstart="handleTouchStart($event)" @touchend="handleTouchEnd($event)" class="space-y-5 max-w-2xl mx-auto">
 
                 <!-- 月セレクター & 今月ボタン -->
                 <div class="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-200 p-3">
@@ -562,7 +673,21 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">開催場所（店名・会場名）</label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-600">開催場所（店名・会場名）</label>
+                            <template x-if="canEdit() && getPastPlaces().length > 0">
+                                <div class="flex items-center gap-1">
+                                    <i class="fa-solid fa-clock-rotate-left text-[11px] text-dionysus-600"></i>
+                                    <select @change="if($event.target.value) { currentRecord.place = $event.target.value; $event.target.value = ''; }"
+                                        class="text-[11px] font-bold bg-dionysus-50 border border-dionysus-200 text-dionysus-800 rounded-lg px-2 py-0.5 focus:outline-none cursor-pointer hover:bg-dionysus-100 transition-colors">
+                                        <option value="">過去の履歴から選択...</option>
+                                        <template x-for="p in getPastPlaces()" :key="p">
+                                            <option :value="p" x-text="p"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </template>
+                        </div>
                         <div class="flex gap-2">
                             <input type="text" x-model="currentRecord.place" :disabled="!canEdit()" placeholder="居酒屋ディオニソス"
                                 class="flex-1 border rounded-xl p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-dionysus-500 font-medium">
@@ -598,7 +723,7 @@
                     </div>
                 </div>
 
-                <!-- 参加人数 & 集金管理チェックリスト（2-② 幹事向け機能） -->
+                <!-- 参加人数 & 集金管理チェックリスト（幹事向け機能） -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 gap-2">
                         <div>
@@ -608,11 +733,19 @@
                             </h3>
                             <p class="text-xs text-slate-400">参加確認と、模合代の回収チェックを行えます</p>
                         </div>
-                        <!-- 回収進捗メーター -->
-                        <div class="bg-gold-50 border border-gold-300 px-3 py-1.5 rounded-xl text-xs font-bold text-stadium-900 flex items-center gap-2">
-                            <span>💰 集金進捗:</span>
-                            <span class="text-base text-dionysus-700 font-black" x-text="getPaidCount() + ' / ' + getAttendingMemberCount()"></span>
-                            <span>名完了</span>
+                        <div class="flex items-center gap-2">
+                            <!-- スコアボード演出手動ボタン -->
+                            <button @click="openScoreboardModal()"
+                                class="bg-stadium-900 hover:bg-black text-gold-400 px-3 py-1.5 rounded-xl text-xs font-black border border-gold-500/50 shadow-sm flex items-center gap-1.5 transition-transform active:scale-95">
+                                <span>⚾</span>
+                                <span>スコアボード</span>
+                            </button>
+                            <!-- 回収進捗メーター -->
+                            <div class="bg-gold-50 border border-gold-300 px-3 py-1.5 rounded-xl text-xs font-bold text-stadium-900 flex items-center gap-2">
+                                <span>💰 進捗:</span>
+                                <span class="text-base text-dionysus-700 font-black" x-text="getPaidCount() + ' / ' + getAttendingMemberCount()"></span>
+                                <span>名</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1030,6 +1163,9 @@
                 newMemberName: '',
                 toastMessage: '',
                 _toastTimer: null,
+                showScoreboardModal: false,
+                touchStartX: 0,
+                touchStartY: 0,
 
                 // Supabase（無料枠）接続用設定
                 supabaseConfig: {
@@ -1313,12 +1449,77 @@
                     this.saveRecords();
                 },
 
-                // 2-② 幹事用：集金トグル
+                // 過去の開催場所（店名）リスト取得
+                getPastPlaces() {
+                    const set = new Set();
+                    for (let m = 1; m <= 12; m++) {
+                        const p = this.records[m]?.place;
+                        if (p && typeof p === 'string' && p.trim() !== '') {
+                            set.add(p.trim());
+                        }
+                    }
+                    return Array.from(set);
+                },
+
+                // 幹事用：集金トグル
                 togglePaid(memberId) {
                     if (!this.canEdit()) return;
                     if (!this.currentRecord.attendance[memberId]) return;
-                    this.currentRecord.attendance[memberId].isPaid = !this.currentRecord.attendance[memberId].isPaid;
+
+                    const wasPaid = this.currentRecord.attendance[memberId].isPaid;
+                    this.currentRecord.attendance[memberId].isPaid = !wasPaid;
                     this.saveRecords();
+
+                    // 新しく集金済になり、かつ出席予定者全員の集金が完了したかチェック
+                    const attending = this.getAttendingMemberCount();
+                    const paid = this.getPaidCount();
+                    if (!wasPaid && attending > 0 && paid === attending) {
+                        this.openScoreboardModal();
+                    }
+                },
+
+                // 野球スコアボードモーダル表示
+                openScoreboardModal() {
+                    this.showScoreboardModal = true;
+                },
+
+                // モバイル左右スワイプ操作
+                handleTouchStart(e) {
+                    if (!e.touches || e.touches.length === 0) return;
+                    const tagName = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+                    if (['input', 'select', 'textarea', 'button'].includes(tagName)) {
+                        this.touchStartX = 0;
+                        this.touchStartY = 0;
+                        return;
+                    }
+                    this.touchStartX = e.touches[0].clientX;
+                    this.touchStartY = e.touches[0].clientY;
+                },
+
+                handleTouchEnd(e) {
+                    if (!this.touchStartX || !e.changedTouches || e.changedTouches.length === 0) return;
+                    const touchEndX = e.changedTouches[0].clientX;
+                    const touchEndY = e.changedTouches[0].clientY;
+
+                    const diffX = touchEndX - this.touchStartX;
+                    const diffY = touchEndY - this.touchStartY;
+
+                    this.touchStartX = 0;
+                    this.touchStartY = 0;
+
+                    if (Math.abs(diffY) < 60 && Math.abs(diffX) >= 50) {
+                        if (diffX < 0) {
+                            if (this.activeMonth < 12) {
+                                this.nextMonth();
+                                this.showToast(`第${this.activeMonth}回へスワイプ ⏩`);
+                            }
+                        } else {
+                            if (this.activeMonth > 1) {
+                                this.prevMonth();
+                                this.showToast(`⏪ 第${this.activeMonth}回へスワイプ`);
+                            }
+                        }
+                    }
                 },
 
                 getPaidCount() {
